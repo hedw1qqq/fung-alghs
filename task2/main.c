@@ -1,81 +1,44 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <math.h>
+#include "funcs.h"
 
-typedef enum {
-    SUCCESS,
-    INVALID_INPUT,
-    OVERFLOW_ERROR
-} ErrorCode;
-
-ErrorCode geometric_mean(double *result, int count, ...) {
-    if (count <= 0) {
-        return INVALID_INPUT;
-    }
-    va_list args;
-    va_start(args, count);
-    *result = 1;
-
-    for (int i = 0; i < count; ++i) {
-        *result *= va_arg(args, double);
-        if (isnan(*result) || isinf(*result)) {
-            va_end(args);
-            return OVERFLOW_ERROR;
-        }
-    }
-
-    *result = pow(*result, 1.0 / count);
-    va_end(args);
-    return SUCCESS;
-}
-
-ErrorCode fast_pow(double base, int exponent, double *result)
-{
-    ErrorCode status;
-    if(exponent < 0)
-    {
-        status = fast_pow(1.0 / base,  -1 * exponent, result);
-        return status;
-    }
-    if(exponent == 0)
-    {
-        *result = 1.0;
-        return SUCCESS;
-    }
-    if(exponent % 2 == 0)
-    {
-        status = fast_pow(base, exponent / 2, result);
-        if((isnan(*result) || isinf(*result)))
-        {
-            return OVERFLOW_ERROR;
-        }
-        *result *= *result;
-    }
-    else
-    {
-        status = fast_pow(base, exponent - 1, result);
-        if((isnan(*result) || isinf(*result)))
-        {
-            return OVERFLOW_ERROR;
-        }
-        *result *= base;
-    }
-    return status;
-}
 
 int main() {
     double result;
-    ErrorCode code = geometric_mean(&result, 4, 3.0, 2.0, 1.0,100.0);
-    if (code != SUCCESS) {
-        return code;
+    ErrorCode code = geometric_mean(&result, 4, 3.0, 2.0, 1.0, 100.0);
+    switch (code) {
+
+        case SUCCESS:
+            printf("%.10f\n", result);
+
+            break;
+
+        case INVALID_INPUT:
+            printf("INVALID INPUT\n");
+            break;
+        case OVERFLOW_ERROR:
+            printf("OVERFLOW ERROR\n");
+            break;
+        default:
+            printf("Unknown Error\n");
+            break;
     }
-    printf("%.10f\n", result);
     double result_pow;
     double base_pow = 4;
     int exponent = -2;
-    ErrorCode status = fast_pow(base_pow,exponent,&result_pow);
-    if (status == SUCCESS){
-        printf("%.10f", result_pow);
+    ErrorCode status = fast_pow(base_pow, exponent, &result_pow);
+    switch (status) {
+
+        case SUCCESS:
+            printf("%.10f", result_pow);
+            break;
+        case INVALID_INPUT:
+            printf("INVALID INPUT");
+            break;
+        case OVERFLOW_ERROR:
+            printf("OVERFLOW ERROR");
+            break;
+        default:
+            printf("Unknown Error");
+            break;
     }
     return 0;
 }
