@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "c:/Users/ivglu/Desktop/2/task1/cmake-build-debug"
+			"value" : "c:/Users/ivglu/Desktop/2/lab2/task2/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -431,7 +431,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/ivglu/Desktop/2/task1/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "C:/Users/ivglu/Desktop/2/lab2/task2/cmake-build-debug/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -503,7 +503,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/ivglu/Desktop/2/task1"
+			"value" : "C:/Users/ivglu/Desktop/2/lab2/task2"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -515,7 +515,7 @@
 				}
 			],
 			"type" : "PATH",
-			"value" : "C:/Program Files (x86)/task1"
+			"value" : "C:/Program Files (x86)/task2"
 		},
 		{
 			"name" : "CMAKE_LINKER",
@@ -731,7 +731,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "task1"
+			"value" : "task2"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1138,7 +1138,7 @@
 			"value" : "TRUE"
 		},
 		{
-			"name" : "task1_BINARY_DIR",
+			"name" : "task2_BINARY_DIR",
 			"properties" : 
 			[
 				{
@@ -1147,10 +1147,10 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/ivglu/Desktop/2/task1/cmake-build-debug"
+			"value" : "C:/Users/ivglu/Desktop/2/lab2/task2/cmake-build-debug"
 		},
 		{
-			"name" : "task1_IS_TOP_LEVEL",
+			"name" : "task2_IS_TOP_LEVEL",
 			"properties" : 
 			[
 				{
@@ -1162,7 +1162,7 @@
 			"value" : "ON"
 		},
 		{
-			"name" : "task1_SOURCE_DIR",
+			"name" : "task2_SOURCE_DIR",
 			"properties" : 
 			[
 				{
@@ -1171,7 +1171,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "C:/Users/ivglu/Desktop/2/task1"
+			"value" : "C:/Users/ivglu/Desktop/2/lab2/task2"
 		}
 	],
 	"kind" : "cache",

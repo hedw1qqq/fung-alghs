@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "task2",
+					"name" : "task3",
 					"targetIndexes" : 
 					[
 						0
@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "task2::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-task2-Debug-dfba0e03795dd7a396a0.json",
-					"name" : "task2",
+					"id" : "task3::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-task3-Debug-2e7e0bbe6dd418d771b7.json",
+					"name" : "task3",
 					"projectIndex" : 0
 				}
 			]
@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/ivglu/Desktop/2/task2/cmake-build-debug",
-		"source" : "C:/Users/ivglu/Desktop/2/task2"
+		"build" : "C:/Users/ivglu/Desktop/2/lab2/task3/cmake-build-debug",
+		"source" : "C:/Users/ivglu/Desktop/2/lab2/task3"
 	},
 	"version" : 
 	{

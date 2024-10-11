@@ -1,4 +1,7 @@
 # ninja log v5
 9	112	7503435145989084	CMakeFiles/task1.dir/main.c.obj	1534191e9916fb57
-0	113	7503435146009069	CMakeFiles/task1.dir/funcs.c.obj	44e88b1dc01882f
 114	175	7503435146598066	task1.exe	55d1ac6f0d6be1d3
+0	113	7503435146009069	CMakeFiles/task1.dir/funcs.c.obj	44e88b1dc01882f
+1	112	7503559778496314	CMakeFiles/task1.dir/main.c.obj	dfd7dc85751312a6
+11	115	7503559778526312	CMakeFiles/task1.dir/funcs.c.obj	ccbacb1e10564016
+115	190	7503559779255010	task1.exe	55d1ac6f0d6be1d3

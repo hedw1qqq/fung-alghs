@@ -90,11 +90,13 @@ ErrorCode process_opt_n(const char *str, char **result) {
     return SUCCESS;
 }
 
-void concat_string(char *str, char **result, int *len) {
-    for (int i = 0; str[i] != '\0'; ++i) {
-        (*result)[(*len)++] = str[i];
+void concat_string(const char *strfrom, char **strto, int *len) {
+    while (*strfrom != '\0') {
+        (*strto)[*len] = *strfrom;
+        (*len)++;
+        strfrom++;
     }
-    (*result)[(*len)] = '\0';
+    (*strto)[*len] = '\0';
 }
 
 ErrorCode str_to_int(const char *number_str, int *number) {
