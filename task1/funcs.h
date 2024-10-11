@@ -27,6 +27,6 @@ ErrorCode process_opt_r(const char *str, char **result);
 ErrorCode process_opt_u(const char *str, char **result);
 ErrorCode process_opt_n(const char *str, char **result);
 ErrorCode process_opt_c(char **argv, int count_str, char **result, int seed);
-ErrorCode GetOpts(int argc, char **argv, kOpts *opt);
+ErrorCode get_opts(int argc, char **argv, kOpts *opt);
 
 #endif //TASK1_FUNCS_H

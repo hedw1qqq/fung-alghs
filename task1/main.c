@@ -4,7 +4,7 @@ int main(int argc, char *argv[]) {
     kOpts opt;
     ErrorCode code;
 
-    code = GetOpts(argc, argv, &opt);
+    code = get_opts(argc, argv, &opt);
     if (code != SUCCESS) {
         printf("Error: Invalid arguments\n");
         return code;
