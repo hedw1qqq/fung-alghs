@@ -1,3 +1,0 @@
-C:/Users/ivglu/Desktop/2/lab2/task1/cmake-build-debug/CMakeFiles/task1.dir
-C:/Users/ivglu/Desktop/2/lab2/task1/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/ivglu/Desktop/2/lab2/task1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
