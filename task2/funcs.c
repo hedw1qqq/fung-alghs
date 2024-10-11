@@ -3,6 +3,7 @@
 //
 
 #include "funcs.h"
+
 ErrorCode geometric_mean(double *result, int count, ...) {
     if (count <= 0) {
         return INVALID_INPUT;
@@ -24,33 +25,25 @@ ErrorCode geometric_mean(double *result, int count, ...) {
     return SUCCESS;
 }
 
-ErrorCode fast_pow(double base, int exponent, double *result)
-{
+ErrorCode fast_pow(double base, int exponent, double *result) {
     ErrorCode status;
-    if(exponent < 0)
-    {
-        status = fast_pow(1.0 / base,  -1 * exponent, result);
+    if (exponent < 0) {
+        status = fast_pow(1.0 / base, -1 * exponent, result);
         return status;
     }
-    if(exponent == 0)
-    {
+    if (exponent == 0) {
         *result = 1.0;
         return SUCCESS;
     }
-    if(exponent % 2 == 0)
-    {
+    if (exponent % 2 == 0) {
         status = fast_pow(base, exponent / 2, result);
-        if((isnan(*result) || isinf(*result)))
-        {
+        if ((isnan(*result) || isinf(*result))) {
             return OVERFLOW_ERROR;
         }
         *result *= *result;
-    }
-    else
-    {
+    } else {
         status = fast_pow(base, exponent - 1, result);
-        if((isnan(*result) || isinf(*result)))
-        {
+        if ((isnan(*result) || isinf(*result))) {
             return OVERFLOW_ERROR;
         }
         *result *= base;
