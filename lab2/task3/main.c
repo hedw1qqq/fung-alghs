@@ -1,105 +1,113 @@
 #include <stdio.h>
-#include <math.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 
-typedef enum {
-    INVALID_INPUT,
-    NO_ROOT,
-    SUCCESS
-} error_code;
+typedef struct {
+    int line_number;
+    int char_position;
+} SubstringOccurrence;
 
-error_code dichotomy(double *result, double a, double b, double epsilon, double (*f)(double)) {
-    *result = 0;
+int find_substring(const char *string, const char *substring) {
+    int i = 0, j = 0;
+    while (string[i] != '\0') {
+        // Проверяем начало возможного совпадения
+        while (string[i + j] != '\0' && substring[j] != '\0' && string[i + j] == substring[j]) {
+            j++;
+        }
+        // Если подстрока полностью совпала
+        if (substring[j] == '\0') {
+            return i;
+        }
+        // Переходим к следующему символу строки
+        i++;
+        j = 0;
+    }
+    // Подстрока не найдена
+    return -1;
+}
 
-    if (f(a) * f(b) >= 0) {
-        return NO_ROOT;
+int search_in_files(const char *substring, SubstringOccurrence **occurrences, int num_files, ...) {
+    va_list args;
+    va_start(args, num_files);
+
+    const int BUFFER_SIZE = 1024;  // Размер буфера для строк
+    int substring_len = strlen(substring);  // Длина подстроки
+    int total_occurrences = 0;  // Общее количество найденных вхождений
+
+    *occurrences = NULL;  // Инициализируем указатель на массив результатов
+
+    for (int i = 0; i < num_files; i++) {
+        const char *file_path = va_arg(args, const char*);
+
+        FILE *file = fopen(file_path, "r");
+        if (!file) {
+            printf("Error opening file: %s\n", file_path);
+            continue;
+        }
+
+        char line[BUFFER_SIZE];
+        char prev_part[BUFFER_SIZE];  // Храним часть предыдущей строки
+        int line_number = 0;
+
+        while (fgets(line, sizeof(line), file)) {
+            line_number++;
+
+            // Если есть остаток от предыдущей строки, объединяем его с текущей
+            char combined_line[BUFFER_SIZE * 2];
+            strcpy(combined_line, prev_part); // Копируем остаток предыдущей строки
+            strcat(combined_line, line);      // Конкатенируем с текущей строкой
+
+            int pos = 0;
+
+            // Поиск вхождений подстроки в объединенной строке
+            while ((pos = find_substring(&combined_line[pos], substring)) != -1) {
+                // Выделяем память для хранения нового результата
+                total_occurrences++;
+                *occurrences = (SubstringOccurrence *) realloc(*occurrences, total_occurrences * sizeof(SubstringOccurrence));
+                if (*occurrences == NULL) {
+                    fclose(file);
+                    va_end(args);
+                    return -1;  // Ошибка при выделении памяти
+                }
+
+                // Заполняем информацию о найденном вхождении
+                (*occurrences)[total_occurrences - 1].line_number = line_number - 1;  // Номер строки
+                (*occurrences)[total_occurrences - 1].char_position = pos + 1;        // Позиция символа
+
+                pos++;  // Переходим на следующий символ после найденного вхождения
+            }
+
+            // Обновляем остаток строки для следующего чтения
+            if (strlen(line) >= substring_len) {
+                strncpy(prev_part, &line[strlen(line) - substring_len + 1], substring_len - 1);
+                prev_part[substring_len - 1] = '\0';
+            } else {
+                strcpy(prev_part, line);
+            }
+        }
+        fclose(file);
     }
 
-    if (epsilon <= 0) {
-        return INVALID_INPUT;
-    }
-
-    while ((b - a) >= epsilon) {
-        *result = (a + b) / 2;
-        if (f(*result) * f(a) < 0)
-            b = *result;
-        else
-            a = *result;
-    }
-
-    return SUCCESS;
-}
-
-
-double dichotomy_ln2(double x) {
-    return exp(x) - 2;
-}
-
-
-double dichotomy_sqrt2(double x) {
-    return pow(x, 2) - 2;
-}
-
-double dichotomy_e(double x) {
-    return log(x) - 1;
-}
-
-
-double dichotomy_linear(double x) {
-    return x - 5;
-}
-
-double dichotomy_quadratic(double x) {
-    return x * x - 4 * x + 3;
-}
-
-double dichotomy_cubic(double x) {
-    return x * x * x - 3 * x * x + 2;
-}
-
-double dichotomy_trigonometric(double x) {
-    return sin(x) - 0.5;
-}
-
-void handle_result(error_code code, double result, const char *name) {
-    if (code == SUCCESS) {
-        printf("for %s: %.10f\n", name, result);
-    } else if (code == NO_ROOT) {
-        printf("for %s: no root on given interval\n", name);
-    } else if (code == INVALID_INPUT) {
-        printf("for %s: invalid input .\n", name);
-    }
+    va_end(args);
+    return total_occurrences;
 }
 
 int main() {
-    double result;
-    error_code code;
+    SubstringOccurrence *occurrences = NULL;
+    int num_occurrences = search_in_files("AAAA", &occurrences, 2, "1.txt", "2.txt");
 
-    code = dichotomy(&result, -4, -1, 0.000001, dichotomy_ln2);
-    handle_result(code, result, "ln2");
+    if (num_occurrences > 0) {
+        for (int i = 0; i < num_occurrences; i++) {
+            printf("Found at line %d, position %d\n",
+                   occurrences[i].line_number, occurrences[i].char_position);
+        }
+    } else {
+        printf("No occurrences found.\n");
+    }
 
-    code = dichotomy(&result, 1, 2, 0.000001, dichotomy_sqrt2);
-    handle_result(code, result, "sqrt(2)");
-
-    code = dichotomy(&result, 1, 3, 0.000001, dichotomy_e);
-    handle_result(code, result, "e");
-
-    code = dichotomy(&result, -5, 10, 0.000001, dichotomy_linear);
-    handle_result(code, result, "linear");
-
-    // (x = 1)
-    code = dichotomy(&result, -23, 2, 0.000001, dichotomy_quadratic);
-    handle_result(code, result, "quadratic (root 1)");
-
-    // (x = 3)
-    code = dichotomy(&result, 2, 44, 0.000001, dichotomy_quadratic);
-    handle_result(code, result, "quadratic (root 2)");
-
-    code = dichotomy(&result, 0, 3, 0.000001, dichotomy_cubic);
-    handle_result(code, result, "cubic");
-
-    code = dichotomy(&result, 0, 2, 0.000001, dichotomy_trigonometric);
-    handle_result(code, result, "sinx = 0.5");
+    // Освобождаем память
+    free(occurrences);
 
     return 0;
 }
-
