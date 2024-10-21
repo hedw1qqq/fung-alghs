@@ -5,53 +5,55 @@
 #include "funcs.h"
 
 
-double cross_product(Point a, Point b, Point c) {
-    return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-}
+int is_convex(int n, ...) {
+    if (n <= 2)
+        return 0;
 
-Error_codes is_convex_polygon(int num_points, ...) {
-    if (num_points < 3) return ERROR_INVALID_INPUT;
+    if (n < 4)
+        return 1;
 
-    va_list args;
-    va_start(args, num_points);
 
-    Point points[num_points];
+    va_list vals;
+    Point all_points[n], a, b, c;
 
-    for (int i = 0; i < num_points; i++) {
-        points[i].x = va_arg(args, double);
-        points[i].y = va_arg(args, double);
+    va_start(vals, n);
+    for (int i = 0; i < n; i++) {
+        all_points[i] = va_arg(vals, Point);
+    }
+    va_end(vals);
+
+    int sign = 0, prev;
+
+    for (int i = 0; i < n; i++) {
+        prev = sign;
+        if (i < 2)
+            a = all_points[n + i - 2], b = all_points[(n + i - 1) % n], c = all_points[i];
+        else
+            a = all_points[i - 2], b = all_points[i - 1], c = all_points[i];
+        double dx1 = b.x - a.x, dy1 = b.y - a.y, dx2 = c.x - b.x, dy2 = c.y - b.y;
+        double cross = dx1 * dy2 - dy1 * dx2;
+        if (cross <= 0)
+            sign = -1;
+        else
+            sign = 1;
+        if (prev == 0)
+            continue;
+        if (sign != prev)
+            return 0;
     }
 
-    va_end(args);
-
-    int sign = 0;
-
-    for (int i = 0; i < num_points; i++) {
-        double cross = cross_product(points[i], points[(i + 1) % num_points], points[(i + 2) % num_points]);
-        if (cross != 0) {
-            if (sign == 0) {
-                sign = (cross > 0) ? 1 : -1;
-            } else if ((cross > 0 && sign == -1) || (cross < 0 && sign == 1)) {
-                return 0;
-            }
-        }
-    }
-
-    return OK;
+    return 1;
 }
 
-Error_codes calculate_polynomial(double * result, double x, int n, ...)
-{
+Error_codes calculate_polynomial(double *result, double x, int n, ...) {
     va_list args;
     va_start(args, n);
 
     *result = 0;
-    for(int i = n; i >= 0; --i)
-    {
+    for (int i = n; i >= 0; --i) {
         double coeff = va_arg(args, double);
         *result += coeff * pow(x, i);
-        if(isinf(*result) || isnan(*result))
-        {
+        if (isinf(*result) || isnan(*result)) {
             return OVERFLOW_ERROR;
         }
     }
@@ -61,43 +63,41 @@ Error_codes calculate_polynomial(double * result, double x, int n, ...)
 }
 
 int is_kaprekar(int number, int base) {
-    long long square = (long long)number * number;
+    long long square = (long long) number * number;
     int digits = 0;
     long long temp = square;
 
-    // Подсчет количества цифр в числе при данном основании системы счисления
     while (temp > 0) {
         digits++;
         temp /= base;
     }
 
-    // Пробуем все возможные разделения числа
     for (int i = 1; i < digits; i++) {
         long long divisor = 1;
         for (int j = 0; j < i; j++) {
-            divisor *= base; // безопасное возведение в степень с целыми числами
+            divisor *= base;
         }
         long long right = square % divisor;
         long long left = square / divisor;
 
-        // Проверяем, чтобы правая часть была положительной и сумма частей была равна исходному числу
         if (right > 0 && left + right == number) {
-            return 1; // Это число Капрекара
+            return 1;
         }
     }
 
-    return 0; // Не является числом Капрекара
+    return 0;
 }
 
 int str_to_int_base(const char *str, int base) {
-    return (int)strtol(str, NULL, base);
+    return (int) strtol(str, NULL, base);
 }
 
-void find_kaprekar_numbers(int base, int num_args, ...) {
+Error_codes find_kaprekar_numbers(int base, int num_args, ...) {
+    if (num_args < 0 || base < 2 || base > 36)
+        return ERROR_INVALID_INPUT;
     va_list args;
     va_start(args, num_args);
 
-    printf("Kaprekar numbers in base %d:\n", base);
 
     for (int i = 0; i < num_args; i++) {
         const char *number_str = va_arg(args, const char*);
@@ -111,4 +111,5 @@ void find_kaprekar_numbers(int base, int num_args, ...) {
     }
 
     va_end(args);
+    return OK;
 }

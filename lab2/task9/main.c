@@ -1,94 +1,71 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdarg.h>
+#include <math.h>
 
-typedef enum {
-    OK ,
-    ERROR_INVALID_BASE,
-    ERROR_INVALID_INPUT,
-    ERROR_MEMORY_ALLOCATION
-} ErrorCode;
+#define EPSILON 1e-6
 
-int char_to_digit(char c) {
-    if (isdigit(c)) return c - '0';
-    if (isalpha(c)) return toupper(c) - 'A' + 10;
-    return -1;
-}
+enum errors {
+    OK,
+    INVALID_MEMORY,
+    INVALID_INPUT
+};
 
-char digit_to_char(int digit) {
-    if (digit < 10) return digit + '0';
-    return digit - 10 + 'A';
-}
 
-ErrorCode add_in_base(const char* num1, const char* num2, int base, char** result) {
-    int len1 = strlen(num1);
-    int len2 = strlen(num2);
-    int max_len = (len1 > len2) ? len1 : len2;
+int is_finite_representation(double number, int base) {
+    // Проверяем, является ли число целым
+    if (fabs(number - round(number)) < EPSILON) {
+        return 1;
+    }
 
-    *result = calloc(max_len + 2, sizeof(char));
-    if (!*result) return ERROR_MEMORY_ALLOCATION;
+    // Находим знаменатель дроби
+    long long denominator = 1;
+    while (fabs(number * denominator - round(number * denominator)) >= EPSILON) {
+        denominator *= base;
 
-    int carry = 0;
-    int i = len1 - 1, j = len2 - 1, k = max_len;
-
-    while (i >= 0 || j >= 0 || carry) {
-        int sum = carry;
-        if (i >= 0) {
-            int digit = char_to_digit(num1[i--]);
-            if (digit == -1 || digit >= base) {
-                free(*result);
-                return ERROR_INVALID_INPUT;
-            }
-            sum += digit;
+        if (denominator > 1000000000000LL) {
+            return 0;
         }
-        if (j >= 0) {
-            int digit = char_to_digit(num2[j--]);
-            if (digit == -1 || digit >= base) {
-                free(*result);
-                return ERROR_INVALID_INPUT;
-            }
-            sum += digit;
-        }
-
-        (*result)[k--] = digit_to_char(sum % base);
-        carry = sum / base;
     }
 
-    char* final_result = *result + k + 1;
-    while (*final_result == '0' && *(final_result + 1) != '\0') {
-        final_result++;
+    // Проверяем, делится ли знаменатель нацело на базу
+    while (denominator % base == 0) {
+        denominator /= base;
     }
 
-    if (final_result != *result) {
-        memmove(*result, final_result, strlen(final_result) + 1);
-        *result = realloc(*result, strlen(*result) + 1);
-    }
-
-    return OK;
+    return denominator == 1;
 }
 
-ErrorCode sum_in_base(int base, int count, char** result, ...) {
-    if (base < 2 || base > 36 || count < 1) return ERROR_INVALID_BASE;
+enum errors check_finite_representation(double **res, int base, int *idx, int count, ...) {
+    if (base < 2) {
+        return INVALID_INPUT;
+    }
 
     va_list args;
-    va_start(args, result);
+    va_start(args, count);
 
-    *result = strdup("0");
-    if (!*result) return ERROR_MEMORY_ALLOCATION;
+    *res = (double *) malloc(sizeof(double) * count);
+    if (*res == NULL) {
+        return INVALID_MEMORY;
+    }
 
-    for (int i = 0; i < count; i++) {
-        const char* num = va_arg(args, const char*);
-        char* temp;
-        ErrorCode error = add_in_base(*result, num, base, &temp);
-        if (error != OK) {
-            free(*result);
-            va_end(args);
-            return error;
+    *idx = 0;
+
+    for (int i = 0; i < count; ++i) {
+        double number = va_arg(args, double);
+
+        if (number > 1 - EPSILON || number < EPSILON) {
+            continue;
         }
-        free(*result);
-        *result = temp;
+
+        if (is_finite_representation(number, base) == 1) {
+            (*res)[(*idx)++] = number;
+        }
+    }
+
+    if (*idx == 0) {
+        free(*res);
+        *res = NULL;
     }
 
     va_end(args);
@@ -96,46 +73,85 @@ ErrorCode sum_in_base(int base, int count, char** result, ...) {
 }
 
 int main() {
-    char* result;
-    ErrorCode error;
+    double *res = NULL;
+    int count = 0;
+    enum errors err;
 
-    error = sum_in_base(16, 3, &result, "A5", "BB", "14C");
-    if (error == OK) {
-        printf("Sum in base 16: %s\n", result);
-        free(result);
+    // Test case 1: Base 3
+    printf("Test case 1: Base 3\n");
+    err = check_finite_representation(&res, 3, &count, 3, 1.0 / 3.0, 0.33333333333333333333333, 0.37);
+    if (err == OK) {
+        if (count == 0) {
+            printf("No numbers have finite representation\n");
+        } else {
+            for (int i = 0; i < count; i++) {
+                printf("%.6f has finite representation\n", res[i]);
+            }
+        }
+        free(res);
     } else {
-        printf("Error: %d\n", error);
+        printf("Error occurred\n");
     }
+    printf("\n");
 
-    error = sum_in_base(2, 4, &result, "1111", "1111", "1111", "1111");
-    if (error == OK) {
-        printf("Sum in base 2: %s\n", result);
-        free(result);
+    // Test case 2: Base 2 (binary)
+    printf("Test case 2: Base 2 (binary)\n");
+    err = check_finite_representation(&res, 2, &count, 3, 0.5, 0.25, 0.1);
+    if (err == OK) {
+        if (count == 0) {
+            printf("No numbers have finite representation\n");
+        } else {
+            for (int i = 0; i < count; i++) {
+                printf("%.6f has finite representation\n", res[i]);
+            }
+        }
+        free(res);
     } else {
-        printf("Error: %d\n", error);
+        printf("Error occurred\n");
     }
+    printf("\n");
 
-    error = sum_in_base(36, 3, &result, "XYZ", "ABC", "123");
-    if (error == OK) {
-        printf("Sum in base 36: %s\n", result);
-        free(result);
+    // Test case 3: Base 10 (decimal)
+    printf("Test case 3: Base 10 (decimal)\n");
+    err = check_finite_representation(&res, 10, &count, 3, 1, 1.0 / 3.0, 0.25);
+    if (err == OK) {
+        if (count == 0) {
+            printf("No numbers have finite representation\n");
+        } else {
+            for (int i = 0; i < count; i++) {
+                printf("%.6f has finite representation\n", res[i]);
+            }
+        }
+        free(res);
     } else {
-        printf("Error: %d\n", error);
+        printf("Error occurred\n");
     }
-    error = sum_in_base(1, 2, &result, "1", "2");
-    if (error == OK) {
-        printf("Sum in base 36: %s\n", result);
-        free(result);
-    } else {
-        printf("Error: %d\n", error);
-    }
+    printf("\n");
 
-    error = sum_in_base(10, 2, &result, "123", "ABC");
-    if (error == OK) {
-        printf("Sum in base 36: %s\n", result);
-        free(result);
+    // Test case 4: Base 16 (hexadecimal)
+    printf("Test case 4: Base 16 (hexadecimal)\n");
+    err = check_finite_representation(&res, 16, &count, 3, 0.0625, 0.125, 0.1);
+    if (err == OK) {
+        if (count == 0) {
+            printf("No numbers have finite representation\n");
+        } else {
+            for (int i = 0; i < count; i++) {
+                printf("%.6f has finite representation\n", res[i]);
+            }
+        }
+        free(res);
     } else {
-        printf("Error: %d\n", error);
+        printf("Error occurred\n");
+    }
+    printf("\n");
+
+    // Test case 5: Invalid base
+    printf("Test case 5: Invalid base\n");
+    err = check_finite_representation(&res, 1, &count, 3, 0.5, 0.25, 0.1);
+    if (err == INVALID_INPUT) {
+        printf("Invalid base\n");
+    } else {
+        printf("Unexpected result\n");
     }
 
     return 0;
