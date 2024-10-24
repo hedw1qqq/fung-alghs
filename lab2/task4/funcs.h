@@ -40,13 +40,12 @@ char *multiply_base(const char *num1, const char *num2, int base, Error_codes *e
 
 char *remove_leading_zeros(const char *num_str);
 
-Error_codes is_kaprekar_base(const char *num_str, int base, int *result);
+Error_codes is_kaprekar_base_v2(const char *num_str, int base, int *result);
 
 void check_kaprekar_numbers_in_base(int base, int n, ...);
 
 void kaprekar_v2(int base, int n, ...);
-
-int is_kaprekar_base_v2(long long n, int base);
+Error_codes is_kaprekar_base(const char *num_str, int base, int *result);
 
 long long str_to_decimal(const char *str, int base);
 

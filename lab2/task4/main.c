@@ -48,12 +48,14 @@ int main() {
     } else printf("Error: %d\n", status);
 
 
-    check_kaprekar_numbers_in_base(16, 5, "0000000000000000FFFF", "AB", "297", "A", "10");
+    check_kaprekar_numbers_in_base(16, 6, "000000FFFF", "AB", "297", "A", "10","C3C4");
     check_kaprekar_numbers_in_base(10, 4, "000000000000000000045", "9", "297", "10");
-    check_kaprekar_numbers_in_base(8, 3, "77777", "111112", "1616");
+    check_kaprekar_numbers_in_base(8, 3, "0000000000077777", "111112", "1616");
+    check_kaprekar_numbers_in_base(36,3,"PP","SS","10");
     printf("\n\n");
     kaprekar_v2(16, 5, "0000000000000000FFFF", "AB", "297", "A", "10");
     kaprekar_v2(10, 4, "000000000000000000045", "9", "297", "10");
     kaprekar_v2(8, 3, "0000000000077777", "111112", "1616");
+    kaprekar_v2(36,3,"PP","SS","10");
     return 0;
 }

@@ -235,70 +235,70 @@ char *remove_leading_zeros(const char *num_str) {
 }
 
 Error_codes is_kaprekar_base(const char *num_str, int base, int *result) {
-    if (base < 2 || base > 36) return ERR_INVALID_BASE;
+    if (base < 2 || base > 36) {
+        return ERR_INVALID_BASE;
+    }
 
-    Error_codes err = OK;
+    if (num_str == NULL || result == NULL) {
+        return ERROR_INVALID_INPUT;
+    }
+
     *result = 0;
+    Error_codes err = OK;
 
-    char *cleaned_num_str = remove_leading_zeros(num_str);
-    char *square = multiply_base(cleaned_num_str, cleaned_num_str, base, &err);
-    if (err != OK) return err;
 
-    int num_len = strlen(cleaned_num_str);
-    int square_len = strlen(square);
+    long long number = str_to_decimal(num_str, base);
+    if (number == -1) {
+        return ERR_INVALID_CHAR;
+    }
 
-    int right_len = num_len;
-    if (square_len <= right_len) {
-        free(square);
+
+    if (number == 1) {
+        *result = 1;
         return OK;
     }
 
-    char *right_part = malloc(right_len + 1);
-    if (right_part == NULL) {
-        free(square);
-        return ERR_ALLOCATION_FAIL;
-    }
-    strcpy(right_part, &square[square_len - right_len]);
 
-    int left_len = square_len - right_len;
-    char *left_part = malloc(left_len + 1);
-    if (left_part == NULL) {
-        free(square);
-        free(right_part);
-        return ERR_ALLOCATION_FAIL;
-    }
-    strncpy(left_part, square, left_len);
-    left_part[left_len] = '\0';
-
-    // Сложение частей в столбик
-    char *sum = NULL;
-    err = add_in_base(left_part, right_part, base, &sum);
-    if (err != OK) {
-        free(square);
-        free(right_part);
-        free(left_part);
-        return err;
+    if (number <= 0) {
+        return ERROR_INVALID_INPUT;
     }
 
-    // Сравнение суммы с исходным числом
-    if (strcmp(sum, cleaned_num_str) == 0) {
-        *result = 1;
+    unsigned long long square = (unsigned long long)number * number;
+
+    int square_digits = 0;
+    unsigned long long temp = square;
+    while (temp > 0) {
+        temp /= base;
+        square_digits++;
     }
 
-    // Освобождение памяти
-    free(square);
-    free(right_part);
-    free(left_part);
-    free(sum);
+    for (int i = 1; i < square_digits; i++) {
+        unsigned long long divisor = 1;
+        for (int j = 0; j < i; j++) {
+            divisor *= base;
+        }
+
+        unsigned long long right = square % divisor;
+        unsigned long long left = square / divisor;
+
+        if (right == 0 || left == 0) {
+            continue;
+        }
+
+        if (left + right == number) {
+            *result = 1;
+            return OK;
+        }
+    }
 
     return OK;
 }
-
 void check_kaprekar_numbers_in_base(int base, int n, ...) {
     if (n < 0) {
-        printf("INVALID ARGS");
+        printf("INVALID ARGS\n");
         return;
     }
+
     va_list args;
     va_start(args, n);
 
@@ -308,23 +308,32 @@ void check_kaprekar_numbers_in_base(int base, int n, ...) {
         char *num_str = va_arg(args, char*);
         int is_kaprekar = 0;
         Error_codes err = is_kaprekar_base(num_str, base, &is_kaprekar);
-        char *num_str_no_leading_zeros = remove_leading_zeros(num_str);
+        char *clean_num = remove_leading_zeros(num_str);
+
         if (err == OK) {
             if (is_kaprekar) {
-                printf("%s is a Kaprekar number in base %d.\n", num_str_no_leading_zeros, base);
+                printf("%s is a Kaprekar number in base %d.\n", clean_num, base);
             } else {
-                printf("%s is not a Kaprekar number in base %d.\n", num_str_no_leading_zeros, base);
+                printf("%s is not a Kaprekar number in base %d.\n", clean_num, base);
             }
         } else {
-            if (err == ERR_INVALID_CHAR) {
-                printf("Error: '%s' contains invalid characters for base %d.\n", num_str_no_leading_zeros, base);
-            } else if (err == ERR_INVALID_BASE) {
-                printf("Error: base %d is not supported.\n", base);
-            } else if (err == ERR_ALLOCATION_FAIL) {
-                printf("Error: memory allocation failed for '%s'.\n", num_str_no_leading_zeros);
+            switch (err) {
+                case ERR_INVALID_BASE:
+                    printf("Error: base %d is not supported.\n", base);
+                    break;
+                case ERR_INVALID_CHAR:
+                    printf("Error: Invalid character in number '%s' for base %d.\n", clean_num, base);
+                    break;
+                case ERR_ALLOCATION_FAIL:
+                    printf("Error: Memory allocation failed for '%s'.\n", clean_num);
+                    break;
+                default:
+                    printf("Error occurred while processing '%s'.\n", clean_num);
+                    break;
             }
         }
     }
+
     printf("\n");
     va_end(args);
 }
@@ -341,49 +350,122 @@ long long str_to_decimal(const char *str, int base) {
     return result;
 }
 
-int is_kaprekar_base_v2(long long n, int base) {
-    if (n == 1) return 1;
-
-    long long square = n * n;
-
-    int num_digits = 0;
-    long long temp = n;
-    while (temp > 0) {
-        temp /= base;
-        num_digits++;
+Error_codes is_kaprekar_base_v2(const char *num_str, int base, int *result) {
+    if (base < 2 || base > 36) {
+        return ERR_INVALID_BASE;
     }
 
-    long long divisor = pow(base, num_digits);
-    long long left = square / divisor;
-    long long right = square % divisor;
+    if (num_str == NULL || result == NULL) {
+        return ERROR_INVALID_INPUT;
+    }
 
+    *result = 0;
+    Error_codes err = OK;
 
-    return (left + right == n);
+    if (strcmp(remove_leading_zeros(num_str), "1") == 0) {
+        *result = 1;
+        return OK;
+    }
+
+    char *square = multiply_base(num_str, num_str, base, &err);
+    if (err != OK || square == NULL) {
+        return err;
+    }
+
+    int square_len = strlen(square);
+
+    for (int split = 1; split < square_len; split++) {
+
+        char *left = malloc(split + 1);
+        char *right = malloc(square_len - split + 1);
+
+        if (!left || !right) {
+            free(square);
+            free(left);
+            free(right);
+            return ERR_ALLOCATION_FAIL;
+        }
+
+        strncpy(left, square, split);
+        left[split] = '\0';
+
+        strcpy(right, square + split);
+
+        if (strcmp(remove_leading_zeros(right), "0") == 0 ||
+            strcmp(remove_leading_zeros(left), "0") == 0) {
+            free(left);
+            free(right);
+            continue;
+        }
+
+        char *sum;
+        err = add_in_base(left, right, base, &sum);
+        if (err != OK) {
+            free(square);
+            free(left);
+            free(right);
+            return err;
+        }
+
+        if (strcmp(remove_leading_zeros(sum), remove_leading_zeros(num_str)) == 0) {
+            *result = 1;
+            free(sum);
+            free(left);
+            free(right);
+            free(square);
+            return OK;
+        }
+
+        free(sum);
+        free(left);
+        free(right);
+    }
+
+    free(square);
+    return OK;
 }
 
 void kaprekar_v2(int base, int n, ...) {
+    if (n < 0) {
+        printf("INVALID ARGS\n");
+        return;
+    }
+
     va_list args;
     va_start(args, n);
 
     printf("Checking Kaprekar numbers in base %d:\n", base);
 
     for (int i = 0; i < n; i++) {
-        char *str = va_arg(args, char*);
-        long long num = str_to_decimal(str, base);
+        char *num_str = va_arg(args, char*);
+        int is_kaprekar = 0;
+        Error_codes err = is_kaprekar_base_v2(num_str, base, &is_kaprekar);
+        char *clean_num = remove_leading_zeros(num_str);
 
-        if (num == -1) {
-            printf("Invalid number '%s' for base %d.\n", str, base);
-            continue;
-        }
-
-        if (is_kaprekar_base_v2(num, base)) {
-            str = remove_leading_zeros(str);
-            printf("%s is a Kaprekar number in base %d.\n", str, base);
+        if (err == OK) {
+            if (is_kaprekar) {
+                printf("%s is a Kaprekar number in base %d.\n", clean_num, base);
+            } else {
+                printf("%s is not a Kaprekar number in base %d.\n", clean_num, base);
+            }
         } else {
-            str = remove_leading_zeros(str);
-            printf("%s is NOT a Kaprekar number in base %d.\n", str, base);
+            switch (err) {
+                case ERR_INVALID_BASE:
+                    printf("Error: base %d is not supported.\n", base);
+                    break;
+                case ERR_INVALID_CHAR:
+                    printf("Error: Invalid character in number '%s' for base %d.\n", clean_num, base);
+                    break;
+                case ERR_ALLOCATION_FAIL:
+                    printf("Error: Memory allocation failed for '%s'.\n", clean_num);
+                    break;
+                default:
+                    printf("Error occurred while processing '%s'.\n", clean_num);
+                    break;
+            }
         }
     }
 
+    printf("\n");
     va_end(args);
 }
