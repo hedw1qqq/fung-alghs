@@ -15,20 +15,39 @@ typedef enum {
     OK,
     ERROR_INVALID_INPUT,
     OVERFLOW_ERROR,
-    MEMORY_ALLOCATION_ERROR
+    ERR_INVALID_BASE,
+    ERR_ALLOCATION_FAIL,
+    ERR_INVALID_CHAR
 } Error_codes;
 typedef struct {
     double x, y;
 } Point;
 
-int is_convex(int n, ...);
+double cross_product(Point p1, Point p2, Point p3);
+
+int is_convex_polygon(int n, ...);
+
+Error_codes add_in_base(const char *num1, const char *num2, int base, char **result);
+
 
 Error_codes calculate_polynomial(double *result, double x, int n, ...);
 
-int is_kaprekar(int number, int base);
+int char_to_int(char c, int base, Error_codes *err);
 
-int str_to_int_base(const char *str, int base);
+Error_codes int_to_char(int n, char *result);
 
-Error_codes find_kaprekar_numbers(int base, int num_args, ...);
+char *multiply_base(const char *num1, const char *num2, int base, Error_codes *err);
+
+char *remove_leading_zeros(const char *num_str);
+
+Error_codes is_kaprekar_base(const char *num_str, int base, int *result);
+
+void check_kaprekar_numbers_in_base(int base, int n, ...);
+
+void kaprekar_v2(int base, int n, ...);
+
+int is_kaprekar_base_v2(long long n, int base);
+
+long long str_to_decimal(const char *str, int base);
 
 #endif //TASK4_FUNCS_H
