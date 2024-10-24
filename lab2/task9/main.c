@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define EPSILON 1e-10
 
 typedef enum {
     OK,
@@ -60,7 +59,7 @@ status_code fraction_approximation(double x, int *numerator, int *denominator) {
         return INVALID_INPUT;
     }
 
-    double eps = EPSILON;
+    double eps = 0.000000001;
     double approximation = (double) *numerator / *denominator;
     double difference = approximation - x;
 
@@ -171,7 +170,6 @@ status_code check_finite_representation(double **result, int *count, int base, i
 
     va_list args;
     va_start(args, n);
-
     *count = 0;
 
     for (int i = 0; i < n; i++) {
@@ -203,6 +201,7 @@ status_code check_finite_representation(double **result, int *count, int base, i
 }
 
 int main() {
+
     double *finite_numbers;
     int count;
     status_code status;
