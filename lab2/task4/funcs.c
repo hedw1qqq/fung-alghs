@@ -102,17 +102,11 @@ int is_convex_polygon(int n, ...) {
         Point p3 = points[(i + 2) % n];
 
         double cross_prod = cross_product(p1, p2, p3);
-
-        if (cross_prod != 0) {
-            int current_sign = (cross_prod > 0) ? 1 : -1;
-            if (sign == 0) {
-                sign = current_sign;
-            } else if (sign != current_sign) {
-                return 0;
-            }
+        if (!sign) sign = (cross_prod > 0) ? 1 : -1;
+        if (cross_prod * sign <= 0) {
+            return 0;
         }
     }
-
     return 1;
 }
 
@@ -263,7 +257,7 @@ Error_codes is_kaprekar_base(const char *num_str, int base, int *result) {
         return ERROR_INVALID_INPUT;
     }
 
-    unsigned long long square = (unsigned long long)number * number;
+    unsigned long long square = (unsigned long long) number * number;
 
     int square_digits = 0;
     unsigned long long temp = square;
@@ -293,6 +287,7 @@ Error_codes is_kaprekar_base(const char *num_str, int base, int *result) {
 
     return OK;
 }
+
 void check_kaprekar_numbers_in_base(int base, int n, ...) {
     if (n < 0) {
         printf("INVALID ARGS\n");
