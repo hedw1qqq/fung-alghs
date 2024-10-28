@@ -82,8 +82,6 @@ int is_convex_polygon(int n, ...) {
     if (n <= 2)
         return 0;
 
-    if (n < 4)
-        return 1;
     va_list vals;
     Point points[n];
 
