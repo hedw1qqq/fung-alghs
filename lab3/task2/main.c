@@ -121,31 +121,33 @@ errors find_max_norm_vectors(Vector **result_vectors, int *result_count,
 }
 
 void print_vector(const Vector *v) {
-    printf("(");
+
     for (int i = 0; i < v->size; i++) {
         printf("%f", v->coords[i]);
         if (i < v->size - 1) printf(", ");
     }
-    printf(")\n");
+    printf("\n");
 }
 
 int main() {
-    double coords1[] = {1.0, 2.0, 3.0};
-    double coords2[] = {4.0, 5.0, 6.0};
-    double coords3[] = {6.0, 7.0, 6.0};
+    int vector_size = 4;
+    int vector_count = 3;
+    double coords1[] = {1.0, 2.0, 3.0, 4.0};
+    double coords2[] = {4.0, 5.0, 6.0, 0.0};
+    double coords3[] = {6.0, 7.0, 6.0, 65.0};
 
     Vector vectors[3];
-    if (create_vector(&vectors[0], 3, coords1) != ok ||
-        create_vector(&vectors[1], 3, coords2) != ok ||
-        create_vector(&vectors[2], 3, coords3) != ok) {
+    if (create_vector(&vectors[0], vector_size, coords1) != ok ||
+        create_vector(&vectors[1], vector_size, coords2) != ok ||
+        create_vector(&vectors[2], vector_size, coords3) != ok) {
         printf("Error creating vectors\n");
-        return 1;
+        return memory_allocation_error;
     }
 
     Vector *result_vectors;
     int result_count;
     errors err = find_max_norm_vectors(&result_vectors, &result_count,
-                                       vectors, 3, norm1, NULL);
+                                       vectors, vector_count, norm1, NULL);
 
     if (err == ok) {
         printf("Vectors with maximum norm1:\n");
@@ -161,7 +163,7 @@ int main() {
 
     int p = 2;
     err = find_max_norm_vectors(&result_vectors, &result_count,
-                                vectors, 3, norm2, &p);
+                                vectors, vector_count, norm2, &p);
 
     if (err == ok) {
         printf("\nVectors with maximum norm2 (p=2):\n");
@@ -175,16 +177,16 @@ int main() {
         free(result_vectors);
     }
 
-    double **matrix = malloc(3 * sizeof(double *));
-    for (int i = 0; i < 3; i++) {
-        matrix[i] = malloc(3 * sizeof(double));
-        for (int j = 0; j < 3; j++) {
+    double **matrix = malloc(vector_size * sizeof(double *));
+    for (int i = 0; i < vector_size; i++) {
+        matrix[i] = malloc(vector_size * sizeof(double));
+        for (int j = 0; j < vector_size; j++) {
             matrix[i][j] = (i == j) ? 1.0 : 0.0;
         }
     }
 
     err = find_max_norm_vectors(&result_vectors, &result_count,
-                                vectors, 3, norm3, matrix);
+                                vectors, vector_count, norm3, matrix);
 
     if (err == ok) {
         printf("\nVectors with maximum norm3:\n");
@@ -198,7 +200,7 @@ int main() {
         free(result_vectors);
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < vector_count; i++) {
         free_vector(&vectors[i]);
         free(matrix[i]);
     }

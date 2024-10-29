@@ -12,16 +12,12 @@ typedef struct {
 } Employee;
 
 typedef enum {
-    OK,
-    ERROR_FILE_OPEN,
-    ERROR_MEMORY_ALLOCATION,
-    ERROR_FILE_WRITE,
-    ERROR_INVALID_ARGS,
-    ERROR_INVALID_INPUT_FILE,
-    ERROR_INVALID_OUTPUT_FILE,
-    ERROR_INPUT_OUTPUT_SAME,
-    ERROR_INVALID_SORT_FLAG
-} ErrorCode;
+    ok,
+    err_open,    // ошибка открытия файла
+    err_memory,  // ошибка выделения памяти
+    err_args,    // неверные аргументы
+    err_files    // проблемы с файлами
+} error_code;
 
 int compare_employees(const void *a, const void *b) {
     const Employee *emp1 = (const Employee *) a;
@@ -44,43 +40,47 @@ int compare_employees(const void *a, const void *b) {
     return (emp1->id < emp2->id) ? -1 : 1;
 }
 
-ErrorCode read_employees(const char *input_file, Employee **employees, size_t *num_employees) {
+error_code read_employees(const char *input_file, Employee **employees, size_t *num_employees) {
     FILE *fp = fopen(input_file, "r");
     if (!fp) {
-        return ERROR_FILE_OPEN;
+        return err_open;
     }
 
     size_t capacity = 16;
     *employees = (Employee *) malloc(capacity * sizeof(Employee));
     if (!*employees) {
         fclose(fp);
-        return ERROR_MEMORY_ALLOCATION;
+        return err_memory;
     }
 
     *num_employees = 0;
-    while (fscanf(fp, "%u %63s %63s %lf", &(*employees)[*num_employees].id, (*employees)[*num_employees].name,
-                  (*employees)[*num_employees].surname, &(*employees)[*num_employees].salary) == 4) {
+    while (fscanf(fp, "%u %63s %63s %lf", &(*employees)[*num_employees].id,
+                  (*employees)[*num_employees].name,
+                  (*employees)[*num_employees].surname,
+                  &(*employees)[*num_employees].salary) == 4) {
         (*num_employees)++;
         if (*num_employees == capacity) {
             capacity *= 2;
-            *employees = (Employee *) realloc(*employees, capacity * sizeof(Employee));
-            if (!*employees) {
+            Employee *temp = (Employee *) realloc(*employees, capacity * sizeof(Employee));
+            if (!temp) {
+                free(*employees);
                 fclose(fp);
-                return ERROR_MEMORY_ALLOCATION;
+                return err_memory;
             }
+            *employees = temp;
         }
     }
 
     fclose(fp);
-    return OK;
+    return ok;
 }
 
-ErrorCode sort_and_write_employees(const char *input_file, const char *output_file, int sort_flag) {
+error_code sort_and_write_employees(const char *input_file, const char *output_file, int sort_flag) {
     Employee *employees = NULL;
     size_t num_employees = 0;
 
-    ErrorCode status = read_employees(input_file, &employees, &num_employees);
-    if (status != 0) {
+    error_code status = read_employees(input_file, &employees, &num_employees);
+    if (status != ok) {
         return status;
     }
 
@@ -89,114 +89,104 @@ ErrorCode sort_and_write_employees(const char *input_file, const char *output_fi
     FILE *fp = fopen(output_file, "w");
     if (!fp) {
         free(employees);
-        return ERROR_FILE_WRITE;
+        return err_open;
     }
 
     if (sort_flag == 'd' || sort_flag == 'D') {
         for (size_t i = num_employees; i > 0; i--) {
-            fprintf(fp, "%u %s %s %.2f\n", employees[i - 1].id, employees[i - 1].name, employees[i - 1].surname,
+            fprintf(fp, "%u %s %s %.2f\n",
+                    employees[i - 1].id,
+                    employees[i - 1].name,
+                    employees[i - 1].surname,
                     employees[i - 1].salary);
         }
     } else {
         for (size_t i = 0; i < num_employees; i++) {
-            fprintf(fp, "%u %s %s %.2f\n", employees[i].id, employees[i].name, employees[i].surname,
+            fprintf(fp, "%u %s %s %.2f\n",
+                    employees[i].id,
+                    employees[i].name,
+                    employees[i].surname,
                     employees[i].salary);
         }
     }
 
     fclose(fp);
     free(employees);
-    return OK;
+    return ok;
 }
 
 int check_file_names(const char *file1, const char *file2) {
     if (strcmp(file1, file2) == 0) {
-        return ERROR_INPUT_OUTPUT_SAME;
+        return err_files;
     }
-    return OK;
+    return ok;
 }
 
 const char *find_file_name(const char *file_string) {
     const char *file_name = strrchr(file_string, '\\');
     if (file_name != NULL)
-        file_name++;
-    else
-        file_name = file_string;
-    return file_name;
+        return file_name + 1;
+    return file_string;
 }
 
-ErrorCode validate_params(int argc, char **argv, char **input_file, char *sort_flag, char **output_file) {
+error_code validate_params(int argc, char **argv, char **input_file, char *sort_flag, char **output_file) {
     if (argc != 4) {
-        return ERROR_INVALID_ARGS;
+        return err_args;
     }
 
-    *input_file = find_file_name(argv[1]);
-    *output_file = find_file_name(argv[3]);
+    *input_file = (char *) find_file_name(argv[1]);
+    *output_file = (char *) find_file_name(argv[3]);
 
-    if (check_file_names(*input_file, *output_file) == ERROR_INPUT_OUTPUT_SAME) {
-        return ERROR_INPUT_OUTPUT_SAME;
+    if (check_file_names(*input_file, *output_file) == err_files) {
+        return err_files;
     }
 
     if (strlen(argv[2]) != 2 || (argv[2][0] != '-' && argv[2][0] != '/')) {
-        return ERROR_INVALID_SORT_FLAG;
+        return err_args;
     }
 
     *sort_flag = argv[2][1];
-    if (*sort_flag != 'a' && *sort_flag != 'd') {
-        return ERROR_INVALID_SORT_FLAG;
+    if (*sort_flag != 'a' && *sort_flag != 'A' &&
+        *sort_flag != 'd' && *sort_flag != 'D') {
+        return err_args;
     }
 
-
-    return OK;
-
+    return ok;
 }
-
 
 int main(int argc, char *argv[]) {
     char *input_file;
     char *output_file;
     char sort_flag;
 
-    ErrorCode param_status = validate_params(argc, argv, &input_file, &sort_flag, &output_file);
-    if (param_status != OK) {
+    error_code param_status = validate_params(argc, argv, &input_file, &sort_flag, &output_file);
+    if (param_status != ok) {
         switch (param_status) {
-            case ERROR_INVALID_ARGS:
-                fprintf(stderr, "Usage: %s <input_file> <-a|-d> <output_file>\n", argv[0]);
+            case err_args:
+                fprintf(stderr, "usage: %s <input_file> <-a|-d> <output_file>\n", argv[0]);
                 break;
-            case ERROR_INPUT_OUTPUT_SAME:
-                fprintf(stderr, "Error: Input and output files must be different.\n");
-                break;
-            case ERROR_INVALID_SORT_FLAG:
-                fprintf(stderr, "Error: Invalid sort flag. Use '-a' or '-d'.\n");
-                break;
-            case ERROR_INVALID_INPUT_FILE:
-                fprintf(stderr, "Error: Invalid input file.\n");
-                break;
-            case ERROR_INVALID_OUTPUT_FILE:
-                fprintf(stderr, "Error: Invalid output file.\n");
+            case err_files:
+                fprintf(stderr, "error: input and output files must be different\n");
                 break;
             default:
-                fprintf(stderr, "Unknown error occurred.\n");
+                fprintf(stderr, "unknown error occurred\n");
         }
         return param_status;
     }
 
-    ErrorCode status = sort_and_write_employees(input_file, output_file, sort_flag);
-    if (status == OK) {
-        printf("Sorting and writing completed successfully.\n");
+    error_code status = sort_and_write_employees(input_file, output_file, sort_flag);
+    if (status == ok) {
+        printf("sorting completed successfully\n");
     } else {
         switch (status) {
-            case ERROR_FILE_OPEN:
-                fprintf(stderr, "Error: Could not open file %s\n", input_file);
+            case err_open:
+                fprintf(stderr, "error: could not access file\n");
                 break;
-            case ERROR_MEMORY_ALLOCATION:
-                fprintf(stderr, "Error: Memory allocation failed.\n");
-                break;
-            case ERROR_FILE_WRITE:
-                fprintf(stderr, "Error: Could not write to file %s\n", output_file);
+            case err_memory:
+                fprintf(stderr, "error: memory allocation failed\n");
                 break;
             default:
-                fprintf(stderr, "Unknown error occurred.\n");
+                fprintf(stderr, "unknown error occurred\n");
         }
     }
 
