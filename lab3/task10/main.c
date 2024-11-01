@@ -3,7 +3,6 @@
 #include <ctype.h>
 
 #define MAX_LINE_LENGTH 1024
-#define MAX_DEPTH 100
 
 
 enum {
@@ -25,9 +24,7 @@ const char *find_file_name(const char *file_string) {
 }
 
 int parse_expression(const char *str, FILE *output) {
-    int depth_stack[MAX_DEPTH];
     int depth = 0;
-    int stack_top = -1;
 
     for (int index = 0; str[index] != '\0'; index++) {
         char c = str[index];
@@ -38,18 +35,9 @@ int parse_expression(const char *str, FILE *output) {
             }
             fprintf(output, "%c\n", c);
         } else if (c == '(') {
-
-            if (stack_top < MAX_DEPTH - 1) {
-                stack_top++;
-                depth_stack[stack_top] = depth;
-                depth++;
-            }
+            depth++;
         } else if (c == ')') {
-
-            if (stack_top >= 0) {
-                depth = depth_stack[stack_top];
-                stack_top--;
-            }
+            depth--;
         }
     }
 
