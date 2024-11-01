@@ -106,7 +106,7 @@ errors find_max_norm_vectors(Vector **result_vectors, int *result_count,
                                        vectors[i].coords);
             if (err != ok) {
                 for (int j = 0; j < result_idx; j++) {
-                    free_vector(&(*result_vectors)[j]);
+                    free_vector(*result_vectors + j);
                 }
                 free(*result_vectors);
                 va_end(args);

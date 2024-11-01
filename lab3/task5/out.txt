@@ -1,0 +1,6 @@
+ID: 1, Full Name: John Doe, Group: GroupA, Average Grade: 5.00
+ID: 2, Full Name: Alice Smith, Group: GroupB, Average Grade: 4.00
+ID: 3, Full Name: Bob Jones, Group: GroupC, Average Grade: 5.00
+ID: 1, Full Name: John Doe, Group: GroupA, Average Grade: 5.00
+ID: 2, Full Name: Alice Smith, Group: GroupB, Average Grade: 4.00
+ID: 3, Full Name: Bob Jones, Group: GroupC, Average Grade: 5.00

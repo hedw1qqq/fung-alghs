@@ -1,0 +1,10 @@
+1 John Doe GroupA 5 5 5 5 5
+2 Alice Smith GroupB 4 4 3 5 4
+3 Bob Jones GroupC 5 5 5 5 5
+4 Mary Wilson GroupA 5 5 6 4 3
+5 Tom Brown 4 4 4 4
+6 Invalid Name123 GroupD 3 4 5 4 3
+7 Kate Lee GroupE 1 4 3 5 4
+8 Sam White GroupF 3 4 5 4 3
+9 John Doe GroupA 5 5 5 5 5
+109 John Doe GroupA 2 3 3 2 2
