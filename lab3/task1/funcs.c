@@ -5,13 +5,13 @@
 #include "funcs.h"
 
 int sum(int num1, int num2) {
-    int res, carry;
-    res = num1 ^ num2;
-    carry = (num1 & num2) << 1;
+    int res = num1 ^ num2;
+    unsigned int carry = (num1 & num2) << 1;
+
     while (carry) {
         int tmp = res;
         res = res ^ carry;
-        carry = (tmp & carry) << 1;
+        carry = (unsigned int)(tmp & carry) << 1;
     }
     return res;
 }
