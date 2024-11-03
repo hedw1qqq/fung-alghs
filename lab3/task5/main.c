@@ -24,6 +24,7 @@ typedef struct {
     int size;
 } StudentArray;
 
+
 int is_valid_name(const char *name) {
     if (!name || strlen(name) == 0) return 0;
     for (int i = 0; i < strlen(name); i++) {
@@ -40,6 +41,140 @@ int is_valid_group(const char *group) {
     return 1;
 }
 
+int check_file_names(const char *file1, const char *file2) {
+    return strcmp(file1, file2);
+}
+
+const char *find_file_name(const char *file_string) {
+    const char *file_name = strrchr(file_string, '\\');
+    if (file_name != NULL)
+        return file_name + 1;
+    return file_string;
+}
+
+void free_student(Student *student) {
+    if (student) {
+        free(student->first_name);
+        free(student->last_name);
+        free(student->group);
+        free(student->grades);
+    }
+}
+
+void free_students(StudentArray *student_array) {
+    if (student_array && student_array->students) {
+        for (int i = 0; i < student_array->size; i++) {
+            free_student(&student_array->students[i]);
+        }
+        free(student_array->students);
+        student_array->students = NULL;
+        student_array->size = 0;
+    }
+}
+
+int compare_by_id(const void *a, const void *b) {
+    const Student *student_a = (const Student *) a;
+    const Student *student_b = (const Student *) b;
+    if (student_a->id < student_b->id) return -1;
+    if (student_a->id > student_b->id) return 1;
+    return 0;
+}
+
+int compare_by_first_name(const void *a, const void *b) {
+    const Student *student_a = (const Student *) a;
+    const Student *student_b = (const Student *) b;
+    return strcmp(student_a->first_name, student_b->first_name);
+}
+
+int compare_by_last_name(const void *a, const void *b) {
+    const Student *student_a = (const Student *) a;
+    const Student *student_b = (const Student *) b;
+    return strcmp(student_a->last_name, student_b->last_name);
+}
+
+int compare_by_group(const void *a, const void *b) {
+    const Student *student_a = (const Student *) a;
+    const Student *student_b = (const Student *) b;
+    return strcmp(student_a->group, student_b->group);
+}
+
+double calculate_average(const Student *student) {
+    if (!student || !student->grades) return 0.0;
+    double sum = 0.0;
+    for (int i = 0; i < 5; i++) {
+        sum += student->grades[i];
+    }
+    return sum / 5.0;
+}
+
+double calculate_total_average(const StudentArray *student_array) {
+    if (!student_array || student_array->size == 0) return 0.0;
+    double total = 0.0;
+    for (int i = 0; i < student_array->size; i++) {
+        total += calculate_average(&student_array->students[i]);
+    }
+    return total / student_array->size;
+}
+
+Student *find_student_by_id(const StudentArray *student_array, unsigned int id) {
+    for (int i = 0; i < student_array->size; i++) {
+        if (student_array->students[i].id == id) {
+            return &student_array->students[i];
+        }
+    }
+    return NULL;
+}
+
+void search_by_first_name(const StudentArray *student_array, const char *first_name) {
+    int found = 0;
+    for (int i = 0; i < student_array->size; i++) {
+        if (strcmp(student_array->students[i].first_name, first_name) == 0) {
+            printf("Found student: ID: %u, %s %s, Group: %s\n",
+                   student_array->students[i].id,
+                   student_array->students[i].first_name,
+                   student_array->students[i].last_name,
+                   student_array->students[i].group);
+            found = 1;
+        }
+    }
+    if (!found) {
+        printf("No students found with first name: %s\n", first_name);
+    }
+}
+
+void search_by_last_name(const StudentArray *student_array, const char *last_name) {
+    int found = 0;
+    for (int i = 0; i < student_array->size; i++) {
+        if (strcmp(student_array->students[i].last_name, last_name) == 0) {
+            printf("Found student: ID: %u, %s %s, Group: %s\n",
+                   student_array->students[i].id,
+                   student_array->students[i].first_name,
+                   student_array->students[i].last_name,
+                   student_array->students[i].group);
+            found = 1;
+        }
+    }
+    if (!found) {
+        printf("No students found with last name: %s\n", last_name);
+    }
+}
+
+void search_by_group(const StudentArray *student_array, const char *group) {
+    int found = 0;
+    for (int i = 0; i < student_array->size; i++) {
+        if (strcmp(student_array->students[i].group, group) == 0) {
+            printf("Found student: ID: %u, %s %s, Group: %s\n",
+                   student_array->students[i].id,
+                   student_array->students[i].first_name,
+                   student_array->students[i].last_name,
+                   student_array->students[i].group);
+            found = 1;
+        }
+    }
+    if (!found) {
+        printf("No students found in group: %s\n", group);
+    }
+}
 
 errors load_students(const char *filename, StudentArray *student_array) {
     FILE *file = fopen(filename, "r");
@@ -58,6 +193,7 @@ errors load_students(const char *filename, StudentArray *student_array) {
             fclose(file);
             return memory_error;
         }
+
         student.first_name = malloc(50 * sizeof(char));
         student.last_name = malloc(50 * sizeof(char));
         student.group = malloc(50 * sizeof(char));
@@ -71,7 +207,6 @@ errors load_students(const char *filename, StudentArray *student_array) {
             return memory_error;
         }
 
-
         int read_count = sscanf(line, "%u %49s %49s %49s %hhu %hhu %hhu %hhu %hhu",
                                 &student.id,
                                 student.first_name,
@@ -83,48 +218,31 @@ errors load_students(const char *filename, StudentArray *student_array) {
                                 &student.grades[3],
                                 &student.grades[4]);
 
-        if (read_count != 9) {
-            free(student.grades);
-            free(student.first_name);
-            free(student.last_name);
-            free(student.group);
-            continue;
-        }
-
-        if (!is_valid_name(student.first_name) ||
+        if (read_count != 9 ||
+            !is_valid_name(student.first_name) ||
             !is_valid_name(student.last_name) ||
             !is_valid_group(student.group)) {
-            free(student.grades);
-            free(student.first_name);
-            free(student.last_name);
-            free(student.group);
+            free_student(&student);
             continue;
         }
 
         int valid_grades = 1;
-        for (int j = 0; j < 5; j++) {
-            if (student.grades[j] < 2 || student.grades[j] > 5) {
+        for (int i = 0; i < 5; i++) {
+            if (student.grades[i] < 2 || student.grades[i] > 5) {
                 valid_grades = 0;
                 break;
             }
         }
 
         if (!valid_grades) {
-            free(student.grades);
-            free(student.first_name);
-            free(student.last_name);
-            free(student.group);
+            free_student(&student);
             continue;
         }
-
 
         Student *temp = realloc(student_array->students,
                                 (student_array->size + 1) * sizeof(Student));
         if (!temp) {
-            free(student.grades);
-            free(student.first_name);
-            free(student.last_name);
-            free(student.group);
+            free_student(&student);
             fclose(file);
             return memory_error;
         }
@@ -137,35 +255,10 @@ errors load_students(const char *filename, StudentArray *student_array) {
     fclose(file);
     return ok;
 }
-void free_students(StudentArray *student_array) {
-    for (int i = 0; i < student_array->size; i++) {
-        free(student_array->students[i].first_name);
-        free(student_array->students[i].last_name);
-        free(student_array->students[i].group);
-        free(student_array->students[i].grades);
-    }
-    free(student_array->students);
-}
-
-double calculate_average(const Student *student) {
-    double total = 0;
-    for (int i = 0; i < 5; i++) {
-        total += student->grades[i];
-    }
-    return total / 5.0;
-}
-
-Student *find_student_by_id(const StudentArray *student_array, unsigned int id) {
-    for (int i = 0; i < student_array->size; i++) {
-        if (student_array->students[i].id == id) {
-            return &student_array->students[i];
-        }
-    }
-    return NULL;
-}
-
 
 errors save_to_log(const char *log_filename, const Student *student) {
+    if (!student) return invalid_input;
+
     FILE *log_file = fopen(log_filename, "a");
     if (!log_file) {
         return file_error;
@@ -182,34 +275,53 @@ errors save_to_log(const char *log_filename, const Student *student) {
     return ok;
 }
 
-void print_above_average_students(const StudentArray *student_array) {
-    double total_average = 0;
-    for (int i = 0; i < student_array->size; i++) {
-        total_average += calculate_average(&student_array->students[i]);
-    }
-    total_average /= student_array->size;
 
-    printf("Students with above average grade (%.2f):\n", total_average);
+void print_above_average_students(const StudentArray *student_array, const char *filename) {
+    FILE *file = fopen(filename, "a");
+    if (!file) {
+        return;
+    }
+    if (!student_array || student_array->size == 0) {
+        printf("No students in array.\n");
+        return;
+    }
+
+    double total_average = calculate_total_average(student_array);
+    fprintf(file, "Students with above average grade (%.2f):\n", total_average);
+    printf("\nStudents with above average grade (%.2f):\n", total_average);
     for (int i = 0; i < student_array->size; i++) {
-        if (calculate_average(&student_array->students[i]) > total_average) {
+        double student_average = calculate_average(&student_array->students[i]);
+        if (student_average > total_average) {
             printf("%s %s, Group: %s, Average Grade: %.2f\n",
                    student_array->students[i].first_name,
                    student_array->students[i].last_name,
                    student_array->students[i].group,
-                   calculate_average(&student_array->students[i]));
+                   student_average);
+            fprintf(file, "%s %s, Group: %s, Average Grade: %.2f\n",
+                    student_array->students[i].first_name,
+                    student_array->students[i].last_name,
+                    student_array->students[i].group,
+                    student_average);
         }
     }
 }
 
-int check_file_names(const char *file1, const char *file2) {
-    return strcmp(file1, file2);
-}
+void sort_and_print_students(StudentArray *student_array, int (*compare)(const void *, const void *)) {
+    if (!student_array || !student_array->students || student_array->size == 0) {
+        printf("No students to sort.\n");
+        return;
+    }
 
-const char *find_file_name(const char *file_string) {
-    const char *file_name = strrchr(file_string, '\\');
-    if (file_name != NULL)
-        return file_name + 1;
-    return file_string;
+    qsort(student_array->students, student_array->size, sizeof(Student), compare);
+
+    printf("\nSorted student list:\n");
+    for (int i = 0; i < student_array->size; i++) {
+        printf("ID: %u, %s %s, Group: %s\n",
+               student_array->students[i].id,
+               student_array->students[i].first_name,
+               student_array->students[i].last_name,
+               student_array->students[i].group);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -217,47 +329,118 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage: %s <path to file> <path to log file>\n", argv[0]);
         return invalid_input;
     }
+
     const char *filename_input = find_file_name(argv[1]);
     const char *filename_output = find_file_name(argv[2]);
+
     if (!check_file_names(filename_input, filename_output)) {
         fprintf(stderr, "Input and output files have the same names\n");
         return same_files_name;
     }
 
     StudentArray student_array = {NULL, 0};
-    errors result = load_students(filename_input, &student_array);
+    errors result = load_students(argv[1], &student_array);
     if (result != ok) {
-        printf("Error: %d", result);
+        printf("Error loading students: %d\n", result);
         return result;
     }
 
     while (1) {
-        printf("Enter command (1: Search by ID, 2: Print students above average, 3: Exit):\n ");
-        int command;
-        scanf("%d", &command);
+        printf("\nMenu:\n");
+        printf("1: Search by ID\n");
+        printf("2: Search by Last Name\n");
+        printf("3: Search by First Name\n");
+        printf("4: Search by Group\n");
+        printf("5: Sort by ID\n");
+        printf("6: Sort by Last Name\n");
+        printf("7: Sort by First Name\n");
+        printf("8: Sort by Group\n");
+        printf("9: Print students above average\n");
+        printf("0: Exit\n");
+        printf("Enter command: ");
 
-        if (command == 1) {
-            printf("Enter student ID:\n");
-            unsigned int id;
-            scanf("%u", &id);
-            Student *student = find_student_by_id(&student_array, id);
-            if (student) {
-                printf("Found student: %s %s, Group: %s, Average Grade: %.2f \n", student->first_name,
-                       student->last_name, student->group,
-                       calculate_average(student));
-                save_to_log(filename_output, student);
-            } else {
-                printf("Student with ID %u not found.\n", id);
+        int command;
+        if (scanf("%d", &command) != 1) {
+            printf("Invalid input. Please enter a number.\n");
+            while (getchar() != '\n');
+            continue;
+        }
+
+        switch (command) {
+            case 0:
+                free_students(&student_array);
+                return ok;
+
+            case 1: {
+                printf("Enter student ID: ");
+                unsigned int id;
+                if (scanf("%u", &id) == 1) {
+                    Student *student = find_student_by_id(&student_array, id);
+                    if (student) {
+                        printf("Found student: %s %s, Group: %s, Average Grade: %.2f\n",
+                               student->first_name, student->last_name,
+                               student->group, calculate_average(student));
+                        save_to_log(argv[2], student);
+                    } else {
+                        printf("Student with ID %u not found.\n", id);
+                    }
+                } else {
+                    printf("Invalid ID format.\n");
+                    while (getchar() != '\n');
+                }
+                break;
             }
-        } else if (command == 2) {
-            print_above_average_students(&student_array);
-        } else if (command == 3) {
-            break;
-        } else {
-            printf("Invalid command. Please try again.\n");
+
+            case 2: {
+                printf("Enter last name: ");
+                char last_name[50];
+                scanf("%49s", last_name);
+                search_by_last_name(&student_array, last_name);
+                break;
+            }
+
+            case 3: {
+                printf("Enter first name: ");
+                char first_name[50];
+                scanf("%49s", first_name);
+                search_by_first_name(&student_array, first_name);
+                break;
+            }
+
+            case 4: {
+                printf("Enter group: ");
+                char group[50];
+                scanf("%49s", group);
+                search_by_group(&student_array, group);
+                break;
+            }
+
+            case 5:
+                sort_and_print_students(&student_array, compare_by_id);
+                break;
+
+            case 6:
+                sort_and_print_students(&student_array, compare_by_last_name);
+                break;
+
+            case 7:
+                sort_and_print_students(&student_array, compare_by_first_name);
+                break;
+
+            case 8:
+                sort_and_print_students(&student_array, compare_by_group);
+                break;
+
+            case 9:
+                print_above_average_students(&student_array, filename_output);
+                break;
+
+            default:
+                printf("Invalid command. Please enter a number between 0 and 9.\n");
+                break;
         }
     }
 
     free_students(&student_array);
-    return 0;
+    return ok;
 }
