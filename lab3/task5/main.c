@@ -256,13 +256,8 @@ errors load_students(const char *filename, StudentArray *student_array) {
     return ok;
 }
 
-errors save_to_log(const char *log_filename, const Student *student) {
-    if (!student) return invalid_input;
-
-    FILE *log_file = fopen(log_filename, "a");
-    if (!log_file) {
-        return file_error;
-    }
+errors save_to_log(FILE *log_file, const Student *student) {
+    if (!student || !log_file) return invalid_input;
 
     fprintf(log_file, "ID: %u, Full Name: %s %s, Group: %s, Average Grade: %.2f\n",
             student->id,
@@ -271,14 +266,12 @@ errors save_to_log(const char *log_filename, const Student *student) {
             student->group,
             calculate_average(student));
 
-    fclose(log_file);
     return ok;
 }
 
 
-void print_above_average_students(const StudentArray *student_array, const char *filename) {
-    FILE *file = fopen(filename, "a");
-    if (!file) {
+void print_above_average_students(const StudentArray *student_array, FILE *log_file, int print_to_console) {
+    if (!log_file) {
         return;
     }
     if (!student_array || student_array->size == 0) {
@@ -287,24 +280,33 @@ void print_above_average_students(const StudentArray *student_array, const char 
     }
 
     double total_average = calculate_total_average(student_array);
-    fprintf(file, "Students with above average grade (%.2f):\n", total_average);
-    printf("\nStudents with above average grade (%.2f):\n", total_average);
+
+    fprintf(log_file, "Students with above average grade (%.2f):\n", total_average);
+
+    if (print_to_console) {
+        printf("\nStudents with above average grade (%.2f):\n", total_average);
+    }
+
     for (int i = 0; i < student_array->size; i++) {
         double student_average = calculate_average(&student_array->students[i]);
         if (student_average > total_average) {
-            printf("%s %s, Group: %s, Average Grade: %.2f\n",
-                   student_array->students[i].first_name,
-                   student_array->students[i].last_name,
-                   student_array->students[i].group,
-                   student_average);
-            fprintf(file, "%s %s, Group: %s, Average Grade: %.2f\n",
+            fprintf(log_file, "%s %s, Group: %s, Average Grade: %.2f\n",
                     student_array->students[i].first_name,
                     student_array->students[i].last_name,
                     student_array->students[i].group,
                     student_average);
+
+            if (print_to_console) {
+                printf("%s %s, Group: %s, Average Grade: %.2f\n",
+                       student_array->students[i].first_name,
+                       student_array->students[i].last_name,
+                       student_array->students[i].group,
+                       student_average);
+            }
         }
     }
 }
+
 
 void sort_and_print_students(StudentArray *student_array, int (*compare)(const void *, const void *)) {
     if (!student_array || !student_array->students || student_array->size == 0) {
@@ -344,7 +346,12 @@ int main(int argc, char *argv[]) {
         printf("Error loading students: %d\n", result);
         return result;
     }
-
+    FILE *log_file = fopen(argv[2], "w");
+    if (!log_file) {
+        free_students(&student_array);
+        printf("Error opening log file.\n");
+        return file_error;
+    }
     while (1) {
         printf("\nMenu:\n");
         printf("1: Search by ID\n");
@@ -368,10 +375,11 @@ int main(int argc, char *argv[]) {
 
         switch (command) {
             case 0:
+                fclose(log_file);
                 free_students(&student_array);
                 return ok;
 
-            case 1: {
+            case 1:
                 printf("Enter student ID: ");
                 unsigned int id;
                 if (scanf("%u", &id) == 1) {
@@ -380,7 +388,26 @@ int main(int argc, char *argv[]) {
                         printf("Found student: %s %s, Group: %s, Average Grade: %.2f\n",
                                student->first_name, student->last_name,
                                student->group, calculate_average(student));
-                        save_to_log(argv[2], student);
+
+                        printf("Do you want to save this info to trace file? (1 - yes, 0 - no): ");
+                        int save_choice;
+                        if (scanf("%d", &save_choice) != 1) {
+                            printf("Invalid input. Please enter a number.\n");
+
+                        }
+                        switch (save_choice) {
+                            case 0:
+                                break;
+                            case 1:
+                                save_to_log(log_file, student);
+                                printf("Information saved to trace file\n");
+                                break;
+                            default:
+                                printf("Invalid option using 0");
+                                break;
+                        }
+
+
                     } else {
                         printf("Student with ID %u not found.\n", id);
                     }
@@ -389,29 +416,45 @@ int main(int argc, char *argv[]) {
                     while (getchar() != '\n');
                 }
                 break;
-            }
+
 
             case 2: {
                 printf("Enter last name: ");
-                char last_name[50];
+
+                char *last_name = malloc(50 * sizeof(char));
+                if (!last_name) {
+                    free(last_name);
+                    return memory_error;
+                }
                 scanf("%49s", last_name);
                 search_by_last_name(&student_array, last_name);
+                free(last_name);
                 break;
             }
 
             case 3: {
                 printf("Enter first name: ");
-                char first_name[50];
+                char *first_name = malloc(50 * sizeof(char));
+                if (!first_name) {
+                    free(first_name);
+                    return memory_error;
+                }
                 scanf("%49s", first_name);
                 search_by_first_name(&student_array, first_name);
+                free(first_name);
                 break;
             }
 
             case 4: {
                 printf("Enter group: ");
-                char group[50];
+                char *group = malloc(50 * sizeof(char));
+                if (!group) {
+                    free(group);
+                    return memory_error;
+                }
                 scanf("%49s", group);
                 search_by_group(&student_array, group);
+                free(group);
                 break;
             }
 
@@ -432,7 +475,31 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 9:
-                print_above_average_students(&student_array, filename_output);
+                printf("Choose output option:\n");
+                printf("1: Print to file only\n");
+                printf("2: Print to both file and console\n");
+                printf("Enter option (1 or 2): ");
+
+                int option;
+                if (scanf("%d", &option) == 1) {
+                    switch (option) {
+                        case 1:
+                            print_above_average_students(&student_array, log_file, 0);
+                            printf("Results have been written to %s\n", filename_output);
+                            break;
+                        case 2:
+                            print_above_average_students(&student_array, log_file, 1);
+                            break;
+                        default:
+                            printf("Invalid option. Using default (print to both)\n");
+                            print_above_average_students(&student_array, log_file, 1);
+                            break;
+                    }
+                } else {
+                    printf("Invalid input. Using default (print to both)\n");
+                    while (getchar() != '\n');
+                    print_above_average_students(&student_array, log_file, 1);
+                }
                 break;
 
             default:
@@ -441,6 +508,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    fclose(log_file);
     free_students(&student_array);
     return ok;
 }
