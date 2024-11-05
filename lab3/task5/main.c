@@ -189,20 +189,15 @@ errors load_students(const char *filename, StudentArray *student_array) {
     while (fgets(line, sizeof(line), file)) {
         Student student;
         student.grades = malloc(5 * sizeof(unsigned char));
-        if (!student.grades) {
-            fclose(file);
-            return memory_error;
-        }
-
         student.first_name = malloc(50 * sizeof(char));
         student.last_name = malloc(50 * sizeof(char));
         student.group = malloc(50 * sizeof(char));
 
-        if (!student.first_name || !student.last_name || !student.group) {
+        if (!student.first_name || !student.last_name || !student.group || !student.grades) {
             free(student.grades);
-            if (student.first_name) free(student.first_name);
-            if (student.last_name) free(student.last_name);
-            if (student.group) free(student.group);
+            free(student.first_name);
+            free(student.last_name);
+            free(student.group);
             fclose(file);
             return memory_error;
         }
