@@ -340,7 +340,9 @@ int main(int argc, char *argv[]) {
         return same_files_name;
     }
 
-    StudentArray student_array = {NULL, 0};
+    StudentArray student_array;
+    student_array.students = NULL;
+    student_array.size = 0;
     errors result = load_students(argv[1], &student_array);
     if (result != ok) {
         printf("Error loading students: %d\n", result);
