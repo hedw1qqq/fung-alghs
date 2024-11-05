@@ -270,7 +270,7 @@ errors save_to_log(FILE *log_file, const Student *student) {
 }
 
 
-void print_above_average_students(const StudentArray *student_array, FILE *log_file, int print_to_console) {
+void print_above_average_students(const StudentArray *student_array, FILE *log_file, int save_to_file) {
     if (!log_file) {
         return;
     }
@@ -281,27 +281,27 @@ void print_above_average_students(const StudentArray *student_array, FILE *log_f
 
     double total_average = calculate_total_average(student_array);
 
-    fprintf(log_file, "Students with above average grade (%.2f):\n", total_average);
+    printf("\nStudents with above average grade (%.2f):\n", total_average);
 
-    if (print_to_console) {
-        printf("\nStudents with above average grade (%.2f):\n", total_average);
+    if (save_to_file) {
+        fprintf(log_file, "Students with above average grade (%.2f):\n", total_average);
     }
 
     for (int i = 0; i < student_array->size; i++) {
         double student_average = calculate_average(&student_array->students[i]);
         if (student_average > total_average) {
-            fprintf(log_file, "%s %s, Group: %s, Average Grade: %.2f\n",
-                    student_array->students[i].first_name,
-                    student_array->students[i].last_name,
-                    student_array->students[i].group,
-                    student_average);
+            printf("%s %s, Group: %s, Average Grade: %.2f\n",
+                   student_array->students[i].first_name,
+                   student_array->students[i].last_name,
+                   student_array->students[i].group,
+                   student_average);
 
-            if (print_to_console) {
-                printf("%s %s, Group: %s, Average Grade: %.2f\n",
-                       student_array->students[i].first_name,
-                       student_array->students[i].last_name,
-                       student_array->students[i].group,
-                       student_average);
+            if (save_to_file) {
+                fprintf(log_file, "%s %s, Group: %s, Average Grade: %.2f\n",
+                        student_array->students[i].first_name,
+                        student_array->students[i].last_name,
+                        student_array->students[i].group,
+                        student_average);
             }
         }
     }
@@ -478,23 +478,22 @@ int main(int argc, char *argv[]) {
 
             case 9:
                 printf("Choose output option:\n");
-                printf("1: Print to file only\n");
-                printf("2: Print to both file and console\n");
-                printf("Enter option (1 or 2): ");
+                printf("0: Print to console only\n");
+                printf("1: Print to both file and console\n");
+                printf("Enter option (0 or 1): ");
 
                 int option;
                 if (scanf("%d", &option) == 1) {
                     switch (option) {
-                        case 1:
+                        case 0:
                             print_above_average_students(&student_array, log_file, 0);
-                            printf("Results have been written to %s\n", filename_output);
                             break;
-                        case 2:
+                        case 1:
                             print_above_average_students(&student_array, log_file, 1);
                             break;
                         default:
-                            printf("Invalid option. Using default (print to both)\n");
-                            print_above_average_students(&student_array, log_file, 1);
+                            printf("Invalid option. Using default (print to console)\n");
+                            print_above_average_students(&student_array, log_file, 0);
                             break;
                     }
                 } else {
