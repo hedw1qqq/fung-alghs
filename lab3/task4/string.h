@@ -1,7 +1,3 @@
-//
-// Created by ivglu on 01.11.2024.
-//
-
 #ifndef LAB3_STRING_H
 #define LAB3_STRING_H
 
@@ -11,37 +7,38 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-
-typedef struct {
-    char *data;
-    int length;
-} String;
-typedef enum {
-    ok = 0,
+typedef enum errors {
+    ok,
     memory_error,
-    invalid_data,
+
 } errors;
 
-errors create_string(String *s, const char *input);
+typedef struct String {
+    char *val;
+    unsigned int length;
+    unsigned int capacity;
+} String;
 
+errors create_str(String *arr, char *str);
 
-errors delete_string(String *s);
+errors append_str(String *arr, char value);
 
+void reset_str(String *arr);
 
-errors compare_strings(const String *a, const String *b, int *result);
+errors resize_str(String *arr, int size_delta);
 
+int extend_str(String *arr);
 
-errors equals_strings(const String *a, const String *b, int *result);
+void destroy_str(String *arr);
 
+errors copystr(String *dst, String *src);
 
-errors copy_string(String *dest, const String *src);
+errors copy_newstr(String *dst, const String *src);
 
+int concat_str(String *A, String B);
 
-errors copy_to_new_string(const String *src, String *dest);
+int compare_str(String a, String b);
 
+int equiv_str(String a, String b);
 
-errors concat_strings(String *a, const String *b);
-
-const char *get_error_message(errors err);
-
-#endif //LAB3_STRING_H
+#endif
