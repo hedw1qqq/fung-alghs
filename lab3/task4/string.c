@@ -1,15 +1,8 @@
 #include "string.h"
 
-static int len(const char* str) {
-    int i = 0;
-    while (str[i] != '\0') {
-        ++i;
-    }
-    return i;
-}
 
 errors create_str(String *arr, char *str) {
-    arr->length = len(str);
+    arr->length = strlen(str);
     arr->capacity = arr->length + 5;
     arr->val = (char *) malloc(sizeof(char) * arr->capacity);
 
@@ -61,10 +54,10 @@ int extend_str(String *arr) {
 }
 
 void destroy_str(String *arr) {
-    if (arr->val)
+    if (arr->val && arr!=NULL) {
         free(arr->val);
-
-    arr->val = NULL;
+        arr->val = NULL;
+    }
     arr->length = 0;
     arr->capacity = 0;
 }
@@ -110,8 +103,8 @@ int compare_str(String a, String b) {
     else if (a.length < b.length)
         return -1;
 
-    char* str1 = a.val;
-    char* str2 = b.val;
+    char *str1 = a.val;
+    char *str2 = b.val;
 
     while (*str1 && *str2) {
         if (*str1 < *str2) return -1;

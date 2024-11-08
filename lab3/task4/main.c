@@ -37,14 +37,12 @@ int is_numeric(const char *str) {
 }
 
 int parse_time(const String *str, struct tm *time) {
-
     memset(time, 0, sizeof(struct tm));
     char *result = strptime(str->val, "%d:%m:%Y %H:%M:%S", time);
     if (result == NULL) {
         printf("Error parsing date: %s\n", str->val);
         return 0;
     }
-
     return 1;
 }
 
@@ -57,7 +55,7 @@ int validate_address(const Address *address) {
         printf("House number must be a positive integer and reasonable value.\n");
         return 0;
     }
-    if (address->apartment_number <= 0 || address->apartment_number > 1000) {
+    if (address->apartment_number <= 0) {
         printf("Apartment number must be a positive integer and reasonable value.\n");
         return 0;
     }
@@ -94,6 +92,11 @@ int validate_mail(const Mail *mail) {
 
     if (difftime(creation_time, delivery_time) > 0) {
         printf("Creation time cannot be later than delivery time.\n");
+        return 0;
+    }
+    time_t current_time = time(NULL);
+    if (difftime(creation_time, current_time) > 0) {
+        printf("Creation time cannot be later than current time.\n");
         return 0;
     }
 
@@ -222,33 +225,39 @@ int is_expired(const Mail *mail) {
     return 0;
 }
 
-void list_all_mails(const Post *post) {
+void list_all_mails(Post *post) {
+
+    sort_mails(post);
     for (size_t i = 0; i < post->mail_count; ++i) {
         print_mail(&post->mails[i]);
     }
 }
 
-void list_delivered_mails(const Post *post) {
+void list_delivered_mails(Post *post) {
 
+    sort_mails(post);
     Mail *delivered_mails = malloc(post->mail_count * sizeof(Mail));
     size_t delivered_count = 0;
-
-
     for (size_t i = 0; i < post->mail_count; ++i) {
         if (is_delivered(&post->mails[i])) {
             delivered_mails[delivered_count++] = post->mails[i];
         }
     }
 
-    for (size_t i = 0; i < delivered_count; ++i) {
-        print_mail(&delivered_mails[i]);
+    if (delivered_count == 0) {
+        printf("No delivered mails.\n");
+    } else {
+        for (size_t i = 0; i < delivered_count; ++i) {
+            print_mail(&delivered_mails[i]);
+        }
     }
 
     free(delivered_mails);
 }
 
-void list_expired_mails(const Post *post) {
+void list_expired_mails(Post *post) {
 
+    sort_mails(post);
     Mail *expired_mails = malloc(post->mail_count * sizeof(Mail));
     size_t expired_count = 0;
 
@@ -258,35 +267,113 @@ void list_expired_mails(const Post *post) {
         }
     }
 
-    for (size_t i = 0; i < expired_count; ++i) {
-        print_mail(&expired_mails[i]);
+    if (expired_count == 0) {
+        printf("No expired mails.\n");
+    } else {
+        for (size_t i = 0; i < expired_count; ++i) {
+            print_mail(&expired_mails[i]);
+        }
     }
 
     free(expired_mails);
 }
 
 void destroy_post(Post *post) {
-
     for (size_t i = 0; i < post->mail_count; ++i) {
-
         destroy_mail(&post->mails[i]);
     }
-
     free(post->mails);
-    post->mails = NULL;
     post->mail_count = 0;
     post->capacity = 0;
+}
 
-    if (post->office_address != NULL) {
+void prompt_string(const char *prompt, char *buffer, size_t size) {
+    printf("%s", prompt);
+    fgets(buffer, size, stdin);
+    buffer[strcspn(buffer, "\n")] = '\0';
+}
 
-        destroy_str(&post->office_address->city);
-        destroy_str(&post->office_address->street);
-        destroy_str(&post->office_address->building);
-        destroy_str(&post->office_address->postal_code);
-
-        free(post->office_address);
-        post->office_address = NULL;
+int prompt_integer(const char *prompt) {
+    int value;
+    printf("%s", prompt);
+    while (scanf("%d", &value) != 1) {
+        printf("Invalid input. Please enter a valid integer.\n");
+        while (getchar() != '\n');
+        printf("%s", prompt);
     }
+    while (getchar() != '\n');
+    return value;
+}
+
+double prompt_double(const char *prompt) {
+    double value;
+    printf("%s", prompt);
+    while (scanf("%lf", &value) != 1) {
+        printf("Invalid input. Please enter a valid number.\n");
+        while (getchar() != '\n');
+        printf("%s", prompt);
+    }
+    while (getchar() != '\n');
+    return value;
+}
+
+void input_mail(Post *post_office) {
+    Mail mail;
+    char buffer[100];
+    int valid = 1;
+
+    prompt_string("Enter City: ", buffer, sizeof(buffer));
+    if (create_str(&mail.recipient.city, buffer) != ok) valid = 0;
+
+    prompt_string("Enter Street: ", buffer, sizeof(buffer));
+    if (valid && create_str(&mail.recipient.street, buffer) != ok) valid = 0;
+
+    mail.recipient.house_number = prompt_integer("Enter house number: ");
+
+    prompt_string("Enter Building: ", buffer, sizeof(buffer));
+    if (valid && create_str(&mail.recipient.building, buffer) != ok) valid = 0;
+
+    mail.recipient.apartment_number = prompt_integer("Enter apartment number: ");
+
+    while (1) {
+        prompt_string("Enter Postal Code (6 digits): ", buffer, sizeof(buffer));
+        if (strlen(buffer) == 6 && is_numeric(buffer)) {
+            if (create_str(&mail.recipient.postal_code, buffer) != ok) {
+                valid = 0;
+            }
+            break;
+        } else {
+            printf("Invalid postal code. Please enter exactly 6 digits.\n");
+        }
+    }
+
+    while (1) {
+        prompt_string("Enter Postal ID (14 digits): ", buffer, sizeof(buffer));
+        if (strlen(buffer) == 14 && is_numeric(buffer)) {
+            if (create_str(&mail.postal_id, buffer) != ok) {
+                valid = 0;
+            }
+            break;
+        } else {
+            printf("Invalid postal ID. Please enter exactly 14 digits.\n");
+        }
+    }
+
+    mail.weight = prompt_double("Enter weight: ");
+
+    prompt_string("Enter Creation Time (dd:MM:yyyy hh:mm:ss): ", buffer, sizeof(buffer));
+    if (valid && create_str(&mail.creation_time, buffer) != ok) valid = 0;
+
+    prompt_string("Enter Delivery Time (dd:MM:yyyy hh:mm:ss): ", buffer, sizeof(buffer));
+    if (valid && create_str(&mail.delivery_time, buffer) != ok) valid = 0;
+
+    if (valid) {
+        add_mail(post_office, mail);
+    } else {
+        destroy_mail(&mail);
+        printf("Failed to create mail due to memory allocation error.\n");
+    }
+    sort_mails(post_office);
 }
 
 int main() {
@@ -294,7 +381,6 @@ int main() {
     post_office.mails = NULL;
     post_office.mail_count = 0;
     post_office.capacity = 0;
-
 
     int choice;
     while (1) {
@@ -305,86 +391,45 @@ int main() {
             continue;
         }
 
-        if (choice == 1) {
-            Mail mail;
-            char buffer[100];
-            int valid = 1;
-
-            printf("Enter City: ");
-            scanf("%99s",buffer);
-            if (create_str(&mail.recipient.city, buffer) != ok) valid = 0;
-
-            printf("Enter Street: ");
-            scanf("%99s",buffer);
-            if (valid && create_str(&mail.recipient.street, buffer) != ok) valid = 0;
-            printf("Enter house number: ");
-            scanf("%d", &mail.recipient.house_number);
-            getchar();
-
-            printf("Enter Building: ");
-            scanf("%99s",buffer);
-            if (valid && create_str(&mail.recipient.building, buffer) != ok) valid = 0;
-            printf("Enter apartment number: ");
-            scanf("%d", &mail.recipient.apartment_number);
-            getchar();
-
-            printf("Enter Postal Code (6 digits): ");
-            scanf("%99s",buffer);
-            if (valid && create_str(&mail.recipient.postal_code, buffer) != ok) valid = 0;
-
-            printf("Enter Postal ID (14 digits): ");
-            scanf("%99s",buffer);
-            if (valid && create_str(&mail.postal_id, buffer) != ok) valid = 0;
-            printf("Enter weight: ");
-            scanf("%lf", &mail.weight);
-            getchar();
-            printf("Enter Creation Time (dd:MM:yyyy hh:mm:ss): ");
-            fgets(buffer, sizeof(buffer), stdin);
-            buffer[strcspn(buffer, "\n")] = '\0';
-            if (valid && create_str(&mail.creation_time, buffer) != ok) valid = 0;
-
-            printf("Enter Delivery Time (dd:MM:yyyy hh:mm:ss): ");
-            fgets(buffer, sizeof(buffer), stdin);
-            buffer[strcspn(buffer, "\n")] = '\0';
-            if (valid && create_str(&mail.delivery_time, buffer) != ok) valid = 0;
-
-            if (valid) {
-                add_mail(&post_office, mail);
-            } else {
-                destroy_mail(&mail);
-                printf("Failed to create mail due to memory allocation error.\n");
+        switch (choice) {
+            case 1:
+                while (getchar() != '\n');
+                input_mail(&post_office);
+                break;
+            case 2: {
+                while (getchar() != '\n');
+                char buffer[100];
+                prompt_string("Enter Postal ID to remove: ", buffer, sizeof(buffer));
+                remove_mail(&post_office, buffer);
+                break;
             }
+            case 3: {
+                while (getchar() != '\n');
+                char buffer[100];
+                prompt_string("Enter Postal ID to find: ", buffer, sizeof(buffer));
+                Mail *mail = find_mail_by_id(&post_office, buffer);
+                if (mail) print_mail(mail);
+                else printf("Mail not found.\n");
+                break;
+            }
+            case 4:
 
-        } else if (choice == 2) {
-            char buffer[100];
-            printf("Enter Postal ID to remove: ");
-            scanf("%s", buffer);
-            remove_mail(&post_office, buffer);
-
-        } else if (choice == 3) {
-            char buffer[100];
-            printf("Enter Postal ID to find: ");
-            scanf("%s", buffer);
-            Mail *mail = find_mail_by_id(&post_office, buffer);
-            if (mail) print_mail(mail);
-            else printf("Mail not found.\n");
-
-        } else if (choice == 4) {
-            list_delivered_mails(&post_office);
-
-        } else if (choice == 5) {
-            list_expired_mails(&post_office);
-
-        } else if (choice == 6) {
-            list_all_mails(&post_office);
-
-        } else if (choice == 7) {
-            break;
-        } else {
-            printf("Invalid choice.\n");
+                list_delivered_mails(&post_office);
+                break;
+            case 5:
+                list_expired_mails(&post_office);
+                break;
+            case 6:
+                sort_mails(&post_office);
+                list_all_mails(&post_office);
+                break;
+            case 7:
+                destroy_post(&post_office);
+                return 0;
+            default:
+                printf("Invalid choice.\n");
         }
     }
-
     destroy_post(&post_office);
     return 0;
 }
