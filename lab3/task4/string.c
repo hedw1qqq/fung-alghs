@@ -87,15 +87,6 @@ errors copy_newstr(String *dst, const String *src) {
     return ok;
 }
 
-//int concat_str_to_arr(String *A, String B) {
-//    for (int i = 0; i < B.length; ++i) {
-//        int err = append_str(A, B.val[i]);
-//        if (err)
-//            return err;
-//    }
-//
-//    return 0;
-//}
 
 int compare_str(String a, String b) {
     if (a.length > b.length)
