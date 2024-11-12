@@ -1,0 +1,12 @@
+load A, input1.txt
+print A, all
+stats A
+rand B, 50, -1000, 1000
+print B, all
+stats B
+remove A, 25, 10
+print A, all
+remove A, 0, 5
+print A, all
+remove A, 50, 15
+print A, all
