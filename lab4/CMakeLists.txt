@@ -6,3 +6,4 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -fsanitize=address -Wall -Wextra -Wpedant
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -Wall -Wextra -Wpedantic")
 add_executable(lab4t1 task1/main.c)
 add_executable(lab4t2 task2/main.c)
+add_executable(lab4t7 task7/main.c)
