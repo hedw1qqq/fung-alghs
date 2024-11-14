@@ -158,38 +158,28 @@ StatusCode cmd_shuffle(Array *array) {
     return OK;
 }
 
-
-void find_min(const Array *array, int *min, int *min_idx) {
+void find_min_max_mean(const Array *array, int *min, int *min_idx, int *max, int *max_idx, double *mean) {
     *min = array->data[0];
+    *max = array->data[0];
     *min_idx = 0;
+    *max_idx = 0;
+
+    double sum = array->data[0];
+
     for (int i = 1; i < array->size; i++) {
         if (array->data[i] < *min) {
             *min = array->data[i];
             *min_idx = i;
         }
-    }
-}
-
-void find_max(const Array *array, int *max, int *max_idx) {
-    *max = array->data[0];
-    *max_idx = 0;
-    for (int i = 1; i < array->size; i++) {
         if (array->data[i] > *max) {
             *max = array->data[i];
             *max_idx = i;
         }
-    }
-}
-
-void find_mean(const Array *array, double *mean) {
-    double sum = 0;
-
-    for (int i = 0; i < array->size; i++) {
-
         sum += array->data[i];
     }
     *mean = sum / array->size;
 }
+
 
 void find_deviation(const Array *array, double *max_deviation, const double mean) {
     *max_deviation = 0;
@@ -210,11 +200,7 @@ StatusCode cmd_stats(const Array *array) {
     int min, max;
     int min_idx, max_idx;
     double mean;
-
-    find_max(array, &max, &max_idx);
-    find_min(array, &min, &min_idx);
-    find_mean(array, &mean);
-
+    find_min_max_mean(array, &min, &min_idx, &max, &max_idx, &mean);
     double max_deviation;
     find_deviation(array, &max_deviation, mean);
 
