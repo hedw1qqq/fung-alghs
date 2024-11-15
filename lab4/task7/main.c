@@ -6,20 +6,20 @@
 
 
 typedef struct {
-    char* name;
+    char *name;
     int value;
 } MemoryCell;
 
 
 typedef struct {
-    MemoryCell* cells;
+    MemoryCell *cells;
     int capacity;
     int size;
 } Interpreter;
 
 
 typedef enum {
-    SUCCESS = 0,
+    SUCCESS,
     ERROR_MEMORY_ALLOCATION,
     ERROR_FILE_OPEN,
     ERROR_FILE_READ,
@@ -30,8 +30,8 @@ typedef enum {
     ERROR_INVALID_NUMBER
 } StatusCode;
 
-StatusCode safe_strtol(const char* str, int* result) {
-    char* endptr;
+StatusCode safe_strtol(const char *str, int *result) {
+    char *endptr;
     long val = strtol(str, &endptr, 10);
 
     if (*endptr != '\0' && !isspace(*endptr)) {
@@ -46,18 +46,18 @@ StatusCode safe_strtol(const char* str, int* result) {
         return ERROR_INVALID_NUMBER;
     }
 
-    *result = (int)val;
+    *result = (int) val;
     return SUCCESS;
 }
 
-int compare_cells(const void* a, const void* b) {
-    const MemoryCell* cell_a = (const MemoryCell*)a;
-    const MemoryCell* cell_b = (const MemoryCell*)b;
+int compare_cells(const void *a, const void *b) {
+    const MemoryCell *cell_a = (const MemoryCell *) a;
+    const MemoryCell *cell_b = (const MemoryCell *) b;
     return strcmp(cell_a->name, cell_b->name);
 }
 
-StatusCode interpreter_init(Interpreter* interpreter) {
-    interpreter->capacity = 8;
+StatusCode interpreter_init(Interpreter *interpreter) {
+    interpreter->capacity = 10;
     interpreter->size = 0;
     interpreter->cells = malloc(interpreter->capacity * sizeof(MemoryCell));
 
@@ -68,7 +68,7 @@ StatusCode interpreter_init(Interpreter* interpreter) {
     return SUCCESS;
 }
 
-StatusCode find_variable(const Interpreter* interpreter, const char* name, int* index) {
+StatusCode find_variable(const Interpreter *interpreter, const char *name, int *index) {
     int left = 0;
     int right = interpreter->size - 1;
 
@@ -92,7 +92,7 @@ StatusCode find_variable(const Interpreter* interpreter, const char* name, int* 
     return ERROR_VARIABLE_NOT_FOUND;
 }
 
-StatusCode add_variable(Interpreter* interpreter, const char* name, int value) {
+StatusCode add_variable(Interpreter *interpreter, const char *name, int value) {
     int index;
     if (find_variable(interpreter, name, &index) == SUCCESS) {
         interpreter->cells[index].value = value;
@@ -101,7 +101,7 @@ StatusCode add_variable(Interpreter* interpreter, const char* name, int value) {
 
     if (interpreter->size == interpreter->capacity) {
         int new_capacity = interpreter->capacity * 2;
-        MemoryCell* new_cells = realloc(interpreter->cells, new_capacity * sizeof(MemoryCell));
+        MemoryCell *new_cells = realloc(interpreter->cells, new_capacity * sizeof(MemoryCell));
 
         if (!new_cells) {
             return ERROR_MEMORY_ALLOCATION;
@@ -123,7 +123,7 @@ StatusCode add_variable(Interpreter* interpreter, const char* name, int value) {
     return SUCCESS;
 }
 
-StatusCode get_variable_value(const Interpreter* interpreter, const char* name, int* value) {
+StatusCode get_variable_value(const Interpreter *interpreter, const char *name, int *value) {
     int index;
     StatusCode status = find_variable(interpreter, name, &index);
 
@@ -134,7 +134,7 @@ StatusCode get_variable_value(const Interpreter* interpreter, const char* name, 
     return status;
 }
 
-StatusCode check_arithmetic_overflow(int a, int b, char op, int* result) {
+StatusCode check_arithmetic_overflow(int a, int b, char op, int *result) {
     switch (op) {
         case '+':
             if ((b > 0 && a > INT_MAX - b) || (b < 0 && a < INT_MIN - b)) {
@@ -186,19 +186,19 @@ StatusCode check_arithmetic_overflow(int a, int b, char op, int* result) {
     return SUCCESS;
 }
 
-void print_all_variables(const Interpreter* interpreter) {
+void print_all_variables(const Interpreter *interpreter) {
     for (int i = 0; i < interpreter->size; i++) {
         printf("%s = %d\n", interpreter->cells[i].name, interpreter->cells[i].value);
     }
 }
 
-StatusCode process_instruction(Interpreter* interpreter, const char* instruction) {
-    char* line = strdup(instruction);
+StatusCode process_instruction(Interpreter *interpreter, const char *instruction) {
+    char *line = strdup(instruction);
     if (!line) {
         return ERROR_MEMORY_ALLOCATION;
     }
 
-    char* semicolon = strchr(line, ';');
+    char *semicolon = strchr(line, ';');
     if (semicolon) {
         *semicolon = '\0';
     }
@@ -207,7 +207,7 @@ StatusCode process_instruction(Interpreter* interpreter, const char* instruction
         if (strlen(line) == 5) {
             print_all_variables(interpreter);
         } else {
-            char* var_name = line + 6;
+            char *var_name = line + 6;
             int value;
             StatusCode status = get_variable_value(interpreter, var_name, &value);
             if (status == SUCCESS) {
@@ -220,18 +220,18 @@ StatusCode process_instruction(Interpreter* interpreter, const char* instruction
         return SUCCESS;
     }
 
-    char* equals = strchr(line, '=');
+    char *equals = strchr(line, '=');
     if (!equals) {
         free(line);
         return ERROR_INVALID_INSTRUCTION;
     }
 
     *equals = '\0';
-    char* var_name = line;
-    char* expression = equals + 1;
+    char *var_name = line;
+    char *expression = equals + 1;
 
     while (*var_name && isspace(*var_name)) var_name++;
-    char* end = var_name + strlen(var_name) - 1;
+    char *end = var_name + strlen(var_name) - 1;
     while (end > var_name && isspace(*end)) *end-- = '\0';
 
     while (*expression && isspace(*expression)) expression++;
@@ -258,12 +258,12 @@ StatusCode process_instruction(Interpreter* interpreter, const char* instruction
         return status;
     }
 
-    char* operator = strpbrk(expression, "+-*/%");
+    char *operator = strpbrk(expression, "+-*/%");
     if (operator) {
         char op = *operator;
         *operator = '\0';
-        char* left_str = expression;
-        char* right_str = operator + 1;
+        char *left_str = expression;
+        char *right_str = operator + 1;
 
         int left_val;
         if (isdigit(*left_str) || *left_str == '-') {
@@ -319,7 +319,7 @@ StatusCode process_instruction(Interpreter* interpreter, const char* instruction
     }
 }
 
-void interpreter_cleanup(Interpreter* interpreter) {
+void interpreter_cleanup(Interpreter *interpreter) {
     for (int i = 0; i < interpreter->size; i++) {
         free(interpreter->cells[i].name);
     }
@@ -329,13 +329,13 @@ void interpreter_cleanup(Interpreter* interpreter) {
     interpreter->capacity = 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Usage: %s <input_file>\n", argv[0]);
         return ERROR_FILE_OPEN;
     }
 
-    FILE* file = fopen(argv[1], "r");
+    FILE *file = fopen(argv[1], "r");
     if (!file) {
         printf("Error: Cannot open file '%s'\n", argv[1]);
         return ERROR_FILE_READ;
@@ -357,7 +357,7 @@ int main(int argc, char* argv[]) {
         if (strlen(line) == 0) continue;
 
         status = process_instruction(&interpreter, line);
-        switch(status) {
+        switch (status) {
             case SUCCESS:
                 break;
             case ERROR_NUMBER_OVERFLOW:

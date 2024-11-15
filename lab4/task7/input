@@ -2,6 +2,7 @@ myvar=55;
 bg=25;
 ccc=bg+11;
 print ccc;
+print zhopa;
 myvar=ccc;
 bg=ccc*myvar;
 print;

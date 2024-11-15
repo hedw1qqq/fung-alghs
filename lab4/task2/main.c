@@ -51,8 +51,15 @@ StatusCode ensure_capacity(Array *array, int needed_size) {
 }
 
 int get_array_index(char name) {
+    if (!isalpha(name)) {
+        return -1;
+    }
+
     name = toupper(name);
-    if (name < 'A' || name > 'Z') return -1;
+    if (name < 'A' || name > 'Z') {
+        return -1;
+    }
+
     return name - 'A';
 }
 
@@ -66,10 +73,12 @@ StatusCode init_array(Array *array) {
 }
 
 void free_array(Array *array) {
-    free(array->data);
-    array->data = NULL;
-    array->size = 0;
-    array->capacity = 0;
+    if (array) {
+        free(array->data);
+        array->data = NULL;
+        array->size = 0;
+        array->capacity = 0;
+    }
 }
 
 StatusCode cmd_load(Array *array, const char *filename) {
@@ -244,7 +253,7 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
 
     if (strcmp(cmd, "load") == 0) {
         char filename[256];
-        if (sscanf(command, "%*s %*c , %s", filename) != 1) {
+        if (sscanf(command, "%*s %*c , %255s", filename) != 1) {
             return ERROR_INVALID_PARAMS;
         }
         return cmd_load(array, filename);
@@ -252,7 +261,7 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
 
     if (strcmp(cmd, "save") == 0) {
         char filename[256];
-        if (sscanf(command, "%*s %*c , %s", filename) != 1) {
+        if (sscanf(command, "%*s %*c , %255s", filename) != 1) {
             return ERROR_INVALID_PARAMS;
         }
         return cmd_save(array, filename);
@@ -435,7 +444,11 @@ int main() {
             case ERROR_ARRAY_NOT_FOUND:
                 printf("Array not found\n");
                 break;
+            default:
+                printf("Unknown Error\n");
+                break;
         }
+
     }
 
     for (int i = 0; i < MAX_ARRAYS; i++) {

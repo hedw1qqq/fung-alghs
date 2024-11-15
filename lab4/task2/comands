@@ -1,4 +1,5 @@
 load A, input1.txt
+load B, input1.txt
 print A, all
 stats A
 rand B, 50, -1000, 1000
