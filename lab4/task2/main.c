@@ -157,13 +157,12 @@ StatusCode cmd_sort(Array *array, int ascending) {
     return OK;
 }
 
+
+int compare_shuffle(const void *a, const void *b) {
+    return rand() % 3 -1;
+}
 StatusCode cmd_shuffle(Array *array) {
-    for (int i = array->size - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        int temp = array->data[i];
-        array->data[i] = array->data[j];
-        array->data[j] = temp;
-    }
+    qsort(array->data, array->size,sizeof(int), compare_shuffle);
     return OK;
 }
 
@@ -189,7 +188,7 @@ void find_min_max_mean(const Array *array, int *min, int *min_idx, int *max, int
     *mean = sum / array->size;
 }
 
-
+//todo максимально встречающийся элемент
 void find_deviation(const Array *array, double *max_deviation, const double mean) {
     *max_deviation = 0;
     for (int i = 0; i < array->size; i++) {
@@ -367,6 +366,10 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
                 return cmd_print(array, 0, array->size - 1);
             }
 
+            int start, end;
+            if (sscanf(command, "%*s %*c , %d , %d", &start, &end) == 2) {
+                return cmd_print(array, start, end);
+            }
             int index;
             if (sscanf(param, "%d", &index) == 1) {
                 if (index < 0 || index >= array->size) {
@@ -377,10 +380,6 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
             }
         }
 
-        int start, end;
-        if (sscanf(command, "%*s %*c , %d , %d", &start, &end) == 2) {
-            return cmd_print(array, start, end);
-        }
 
         return ERROR_INVALID_PARAMS;
     }
@@ -388,7 +387,7 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
     return ERROR_INVALID_COMMAND;
 }
 
-int main() {
+int main(void) {
     ArrayStorage storage = {0};
     srand(time(NULL));
 
