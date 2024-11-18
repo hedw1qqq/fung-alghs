@@ -12,7 +12,7 @@ private:
 
 public:
     LogicalValuesArray(unsigned int initial_value = 0) {
-        if (initial_value > numeric_limits<unsigned int>::max()) {
+        if (initial_value > INT_MAX || initial_value < INT_MIN)  {
             throw std::overflow_error("Value exceeds maximum for unsigned int.");
         }
         value = initial_value;
@@ -66,7 +66,7 @@ public:
     }
 
     bool get_bit(int position) const {
-        if (position < 0 || position >= 32) {
+        if (position < 0 || position >= sizeof(int) * 8) {
             throw std::out_of_range("Bit position must be between 0 and 31.");
         }
         return (value >> position) & 1;
@@ -77,7 +77,7 @@ public:
         if (binary_str == nullptr) {
             throw std::invalid_argument("Binary string buffer cannot be null.");
         }
-        bitset<32> bits(value);
+        bitset<sizeof(int) * 8> bits(value);
         strcpy(binary_str, bits.to_string().c_str());
     }
 
@@ -104,7 +104,7 @@ int main() {
         std::cout << "Bit 0 of a: " << a.get_bit(0) << std::endl;
         std::cout << "Bit 2 of a: " << a.get_bit(2) << std::endl;
 
-        char binary_str[33]; // Для хранения двоичной строки
+        char binary_str[sizeof(int) * 8 + 1]; // Для хранения двоичной строки
         a.to_binary_string(binary_str);
         std::cout << "Binary representation of a: " << binary_str << std::endl;
     }
