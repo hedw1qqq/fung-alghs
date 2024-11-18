@@ -12,8 +12,8 @@ private:
 
 public:
     LogicalValuesArray(unsigned int initial_value = 0) {
-        if (initial_value > INT_MAX || initial_value < INT_MIN)  {
-            throw std::overflow_error("Value exceeds maximum for unsigned int.");
+        if (initial_value > UINT_MAX) {
+            throw std::overflow_error("overflow!");
         }
         value = initial_value;
     }
@@ -77,9 +77,16 @@ public:
         if (binary_str == nullptr) {
             throw std::invalid_argument("Binary string buffer cannot be null.");
         }
-        bitset<sizeof(int) * 8> bits(value);
-        strcpy(binary_str, bits.to_string().c_str());
+
+        int pos = sizeof(int) * 8 - 1;
+
+        for (int i = 0; i <= pos; i++) {
+            binary_str[i] = ((value >> (pos - i)) & 1) + '0';
+        }
+
+        binary_str[sizeof(int) * 8] = '\0';
     }
+
 
 };
 

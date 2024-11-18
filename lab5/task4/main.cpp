@@ -2,6 +2,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <limits>
+#include <cfloat>
 
 using namespace std;
 
@@ -13,7 +14,16 @@ private:
 public:
     ~Complex() = default;
 
-    Complex(double real = 0, double imagine = 0) : real(real), imagine(imagine) {}
+    Complex(double rl = 0, double img = 0) {
+        if (rl > DBL_MAX || rl < -DBL_MAX ||
+            img > DBL_MAX || img < -DBL_MAX ||
+            isnan(rl) || isnan(img) ||
+            isinf(rl) || isinf(img)) {
+            throw std::overflow_error("overflow");
+        }
+        real = rl;
+        imagine = img;
+    }
 
     Complex &operator=(const Complex &other) noexcept {
         if (this != &other) {
