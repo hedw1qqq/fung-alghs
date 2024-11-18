@@ -87,7 +87,12 @@ private:
 
 
 public:
-    binary_int(int val = 0) : value(val) {}
+    binary_int(int val = 0){
+        if (val < INT_MIN || val > INT_MAX){
+            throw overflow_error("overflow!");
+        }
+        value = val;
+    }
 
     ~binary_int() = default;
 
