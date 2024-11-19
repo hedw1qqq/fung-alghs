@@ -87,8 +87,8 @@ private:
 
 
 public:
-    binary_int(int val = 0){
-        if (val < INT_MIN || val > INT_MAX){
+    binary_int(int val = 0) {
+        if (val < INT_MIN || val > INT_MAX) {
             throw overflow_error("overflow!");
         }
         value = val;
@@ -246,6 +246,8 @@ int main() {
     } catch (const overflow_error &e) {
         cerr << "overflow!" << endl;
     }
-
+    catch (...) {
+        cerr << "Unknown error occurred!" << endl;
+    }
     return 0;
 }

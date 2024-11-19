@@ -13,7 +13,7 @@ private:
 public:
     LogicalValuesArray(unsigned int initial_value = 0) {
         if (initial_value > UINT_MAX) {
-            throw std::overflow_error("overflow!");
+            throw overflow_error("overflow!");
         }
         value = initial_value;
     }
@@ -37,11 +37,11 @@ public:
     }
 
     unsigned int implication(const LogicalValuesArray &other) const {
-        return ~(value & ~other.get_value()); // !(A && !B)
+        return (~value || other.get_value()); // !A || B
     }
 
     unsigned int coimplication(const LogicalValuesArray &other) const {
-        return ~(value ^ other.get_value()); // !(A ^ B)
+        return (value && ~other.get_value()); // A && !B
     }
 
 
@@ -67,17 +67,19 @@ public:
 
     bool get_bit(int position) const {
         if (position < 0 || position >= sizeof(int) * 8) {
-            throw std::out_of_range("Bit position must be between 0 and 31.");
+            throw out_of_range("Bit position must be between 0 and 31.");
         }
         return (value >> position) & 1;
     }
 
 
-    void to_binary_string(char *binary_str) const {
+    void to_binary_string(char *binary_str, size_t size) const {
         if (binary_str == nullptr) {
-            throw std::invalid_argument("Binary string buffer cannot be null.");
+            throw invalid_argument("Binary string buffer cannot be null.");
         }
-
+        if (size != sizeof(int) * 8 + 1){
+            throw length_error("Buffer size too small");
+        }
         int pos = sizeof(int) * 8 - 1;
 
         for (int i = 0; i <= pos; i++) {
@@ -95,25 +97,25 @@ int main() {
         LogicalValuesArray a(5); // 5 в двоичной форме: 00000000000000000000000000000101
         LogicalValuesArray b(3); // 3 в двоичной форме: 00000000000000000000000000000011
 
-        std::cout << "a: " << a.get_value() << ", b: " << b.get_value() << std::endl;
+        cout << "a: " << a.get_value() << ", b: " << b.get_value() << endl;
 
-        std::cout << "Inversion of a: " << a.inversion() << std::endl;
-        std::cout << "Conjunction (AND) a & b: " << a.conjunction(b) << std::endl;
-        std::cout << "Disjunction (OR) a | b: " << a.disjunction(b) << std::endl;
-        std::cout << "Implication a -> b: " << a.implication(b) << std::endl;
-        std::cout << "Equivalence a == b: " << a.equivalence(b) << std::endl;
-        std::cout << "XOR a ^ b: " << a.xor_modulo2(b) << std::endl;
-        std::cout << "Pierce Arrow (NAND) a NAND b: " << a.pierce_arrow(b) << std::endl;
-        std::cout << "Sheffer Stroke (NOR) a NOR b: " << a.sheffer_stroke(b) << std::endl;
+        cout << "Inversion of a: " << a.inversion() << endl;
+        cout << "Conjunction (AND) a & b: " << a.conjunction(b) << endl;
+        cout << "Disjunction (OR) a | b: " << a.disjunction(b) << endl;
+        cout << "Implication a -> b: " << a.implication(b) << endl;
+        cout << "Equivalence a == b: " << a.equivalence(b) << endl;
+        cout << "XOR a ^ b: " << a.xor_modulo2(b) << endl;
+        cout << "Pierce Arrow (NAND) a NAND b: " << a.pierce_arrow(b) << endl;
+        cout << "Sheffer Stroke (NOR) a NOR b: " << a.sheffer_stroke(b) << endl;
 
-        std::cout << "Equality check (a == b): " << (LogicalValuesArray::equals(a, b) ? "true" : "false") << std::endl;
+        cout << "Equality check (a == b): " << (LogicalValuesArray::equals(a, b) ? "true" : "false") << endl;
 
-        std::cout << "Bit 0 of a: " << a.get_bit(0) << std::endl;
-        std::cout << "Bit 2 of a: " << a.get_bit(2) << std::endl;
+        cout << "Bit 0 of a: " << a.get_bit(0) << endl;
+        cout << "Bit 2 of a: " << a.get_bit(1) << endl;
 
-        char binary_str[sizeof(int) * 8 + 1]; // Для хранения двоичной строки
-        a.to_binary_string(binary_str);
-        std::cout << "Binary representation of a: " << binary_str << std::endl;
+        char binary_str[sizeof(int) * 8 + 1]; //
+        a.to_binary_string(binary_str,sizeof(binary_str));
+        cout << "Binary representation of a: " << binary_str << endl;
     }
     catch (const overflow_error &e) {
         cerr << "Overflow!" << endl;
@@ -124,5 +126,11 @@ int main() {
     catch (const out_of_range &e) {
         cerr << "Bit position must be between 0 and 31." << endl;
     }
+    catch (const length_error &e){
+        cerr << "Buffer too small" << endl;
+    }
+    catch (...) {
+    cerr << "Unknown error occurred!" << endl;
+}
     return 0;
 }

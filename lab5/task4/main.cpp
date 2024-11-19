@@ -16,9 +16,8 @@ public:
 
     Complex(double rl = 0, double img = 0) {
         if (rl > DBL_MAX || rl < -DBL_MAX ||
-            img > DBL_MAX || img < -DBL_MAX ||
-            isnan(rl) || isnan(img) ||
-            isinf(rl) || isinf(img)) {
+            img > DBL_MAX || img < -DBL_MAX)
+             {
             throw std::overflow_error("overflow");
         }
         real = rl;
