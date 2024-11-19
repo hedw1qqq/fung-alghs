@@ -18,7 +18,7 @@ public:
         if (rl > DBL_MAX || rl < -DBL_MAX ||
             img > DBL_MAX || img < -DBL_MAX)
              {
-            throw std::overflow_error("overflow");
+            throw overflow_error("overflow");
         }
         real = rl;
         imagine = img;
@@ -153,7 +153,7 @@ private:
     }
 };
 
-std::ostream &operator<<(std::ostream &os, const Complex &complex) {
+ostream &operator<<(ostream &os, const Complex &complex) {
     return os << "real = " << complex.get_real() << ", imagine = " << complex.get_imagine();
 }
 
