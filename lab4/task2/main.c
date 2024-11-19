@@ -157,12 +157,13 @@ StatusCode cmd_sort(Array *array, int ascending) {
     return OK;
 }
 
-
-int compare_shuffle(const void *a, const void *b) {
-    return rand() % 3 -1;
-}
 StatusCode cmd_shuffle(Array *array) {
-    qsort(array->data, array->size,sizeof(int), compare_shuffle);
+    for (int i = array->size - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int temp = array->data[i];
+        array->data[i] = array->data[j];
+        array->data[j] = temp;
+    }
     return OK;
 }
 
@@ -188,7 +189,7 @@ void find_min_max_mean(const Array *array, int *min, int *min_idx, int *max, int
     *mean = sum / array->size;
 }
 
-//todo максимально встречающийся элемент
+
 void find_deviation(const Array *array, double *max_deviation, const double mean) {
     *max_deviation = 0;
     for (int i = 0; i < array->size; i++) {
@@ -199,22 +200,63 @@ void find_deviation(const Array *array, double *max_deviation, const double mean
     }
 }
 
+void find_most_frequent(const Array *array, int *most_freq, int *frequency) {
+    if (array->size == 0) {
+        *most_freq = 0;
+        *frequency = 0;
+        return;
+    }
+
+
+    Array temp_array = *array;
+    qsort(temp_array.data, temp_array.size, sizeof(int), compare_asc);
+
+
+    int current_freq = 1;
+    int max_freq = 1;
+    int current_element = temp_array.data[0];
+    *most_freq = temp_array.data[0];
+
+    for (int i = 1; i < temp_array.size; i++) {
+        if (temp_array.data[i] == current_element) {
+            current_freq++;
+        } else {
+            if (current_freq > max_freq ||
+                (current_freq == max_freq && current_element > *most_freq)) {
+                max_freq = current_freq;
+                *most_freq = current_element;
+            }
+            current_freq = 1;
+            current_element = temp_array.data[i];
+        }
+    }
+
+    if (current_freq > max_freq ||
+        (current_freq == max_freq && current_element > *most_freq)) {
+        max_freq = current_freq;
+        *most_freq = current_element;
+    }
+
+    *frequency = max_freq;
+}
+
 StatusCode cmd_stats(const Array *array) {
     if (array->size == 0) {
         printf("Array is empty\n");
         return OK;
     }
 
-    int min, max;
-    int min_idx, max_idx;
-    double mean;
+    int min, max, min_idx, max_idx, most_freq, frequency;
+    double mean, max_deviation;
+
     find_min_max_mean(array, &min, &min_idx, &max, &max_idx, &mean);
-    double max_deviation;
     find_deviation(array, &max_deviation, mean);
+    find_most_frequent(array, &most_freq, &frequency);
 
     printf("Size: %d\n", array->size);
     printf("Min: %d (index: %d)\n", min, min_idx);
     printf("Max: %d (index: %d)\n", max, max_idx);
+    printf("Most frequent: %d (frequency: %d)\n", most_freq, frequency);
     printf("Mean: %.2f\n", mean);
     printf("Max deviation: %.2f\n", max_deviation);
 
@@ -365,7 +407,6 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
             if (strcmp(param, "all") == 0) {
                 return cmd_print(array, 0, array->size - 1);
             }
-
             int start, end;
             if (sscanf(command, "%*s %*c , %d , %d", &start, &end) == 2) {
                 return cmd_print(array, start, end);
@@ -387,7 +428,7 @@ StatusCode process_command(ArrayStorage *storage, char *command) {
     return ERROR_INVALID_COMMAND;
 }
 
-int main(void) {
+int main() {
     ArrayStorage storage = {0};
     srand(time(NULL));
 
