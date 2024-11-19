@@ -77,16 +77,17 @@ public:
         if (binary_str == nullptr) {
             throw invalid_argument("Binary string buffer cannot be null.");
         }
-        if (size != sizeof(int) * 8 + 1){
+        size_t binary_length = sizeof(int) * 8;
+        if (size < binary_length + 1) {
             throw length_error("Buffer size too small");
         }
-        int pos = sizeof(int) * 8 - 1;
 
-        for (int i = 0; i <= pos; i++) {
-            binary_str[i] = ((value >> (pos - i)) & 1) + '0';
+        for (size_t i = 0; i < binary_length; i++) {
+            binary_str[i] = ((value >> (binary_length - 1 - i)) & 1) + '0';
         }
 
-        binary_str[sizeof(int) * 8] = '\0';
+        binary_str[binary_length] = '\0';
+
     }
 
 
@@ -94,7 +95,7 @@ public:
 
 int main() {
     try {
-        LogicalValuesArray a(5); // 5 в двоичной форме: 00000000000000000000000000000101
+        LogicalValuesArray a(0); // 5 в двоичной форме: 00000000000000000000000000000101
         LogicalValuesArray b(3); // 3 в двоичной форме: 00000000000000000000000000000011
 
         cout << "a: " << a.get_value() << ", b: " << b.get_value() << endl;
@@ -114,7 +115,7 @@ int main() {
         cout << "Bit 2 of a: " << a.get_bit(1) << endl;
 
         char binary_str[sizeof(int) * 8 + 1]; //
-        a.to_binary_string(binary_str,sizeof(binary_str));
+        a.to_binary_string(binary_str, sizeof(binary_str));
         cout << "Binary representation of a: " << binary_str << endl;
     }
     catch (const overflow_error &e) {
@@ -126,11 +127,11 @@ int main() {
     catch (const out_of_range &e) {
         cerr << "Bit position must be between 0 and 31." << endl;
     }
-    catch (const length_error &e){
+    catch (const length_error &e) {
         cerr << "Buffer too small" << endl;
     }
     catch (...) {
-    cerr << "Unknown error occurred!" << endl;
-}
+        cerr << "Unknown error occurred!" << endl;
+    }
     return 0;
 }
