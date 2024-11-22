@@ -9,67 +9,55 @@ private:
     unsigned int value;
 
 public:
-    // Конструктор
+
     LogicalValuesArray(unsigned int initial_value = 0) {
         value = initial_value;
     }
 
-    // Аксессор для поля value
     unsigned int get_value() const {
         return value;
     }
 
-    // Инверсия
     LogicalValuesArray inversion() const {
         return LogicalValuesArray(~value);
     }
 
-    // Конъюнкция (AND)
     LogicalValuesArray conjunction(const LogicalValuesArray &other) const {
         return LogicalValuesArray(value & other.value);
     }
 
-    // Дизъюнкция (OR)
     LogicalValuesArray disjunction(const LogicalValuesArray &other) const {
         return LogicalValuesArray(value | other.value);
     }
 
-    // Импликация (A → B)
     LogicalValuesArray implication(const LogicalValuesArray &other) const {
         return LogicalValuesArray(~value | other.value); // !A | B
     }
 
-    // Коимпликация (A ∧ ¬B)
     LogicalValuesArray coimplication(const LogicalValuesArray &other) const {
         return LogicalValuesArray(value & ~other.value); // A & !B
     }
 
-    // Сложение по модулю 2 (XOR)
     LogicalValuesArray xor_modulo2(const LogicalValuesArray &other) const {
         return LogicalValuesArray(value ^ other.value);
     }
 
-    // Эквивалентность (A ≡ B)
     LogicalValuesArray equivalence(const LogicalValuesArray &other) const {
         return xor_modulo2(other).inversion(); // !(A ^ B)
     }
 
-    // Стрелка Пирса (NOR)
     LogicalValuesArray pierce_arrow(const LogicalValuesArray &other) const {
         return LogicalValuesArray(~(value | other.value)); // !(A | B)
     }
 
-    // Штрих Шеффера (NAND)
     LogicalValuesArray sheffer_stroke(const LogicalValuesArray &other) const {
         return LogicalValuesArray(~(value & other.value)); // !(A & B)
     }
 
-    // Проверка эквивалентности двух объектов
     static bool equals(const LogicalValuesArray &a, const LogicalValuesArray &b) {
         return a.get_value() == b.get_value();
     }
 
-    // Получение значения бита по позиции
     bool get_bit(int position) const {
         if (position < 0 || position >= sizeof(unsigned int) * 8) {
             throw out_of_range("Bit position must be between 0 and 31.");
@@ -77,7 +65,6 @@ public:
         return (value >> position) & 1;
     }
 
-    // Двоичное представление в виде строки
     void to_binary_string(char *binary_str, size_t size) const {
         if (binary_str == nullptr) {
             throw invalid_argument("Binary string buffer cannot be null.");
