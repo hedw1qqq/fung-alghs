@@ -7,7 +7,7 @@ class binary_int {
 private:
     int value;
 
-    static int sum(int num1, int num2) {
+    int sum(int num1, int num2) const {
         while (num2 != 0) {
             int carry = num1 & num2;
             num1 = num1 ^ num2;
@@ -16,15 +16,15 @@ private:
         return num1;
     }
 
-    static int negative(int n) {
+    int negative(int n) const {
         return sum(~n, 1);
     }
 
-    static int sum_with_negative(int a, int b) {
+    int sum_with_negative(int a, int b) const {
         return sum(a, negative(b));
     }
 
-    static int multiply(int a, int b) {
+    int multiply(int a, int b) const {
         int result = 0;
         bool is_negative = (a < 0) ^ (b < 0);
 
@@ -41,19 +41,19 @@ private:
         return is_negative ? negative(result) : result;
     }
 
-    static bool will_add_overflow(int a, int b) {
+    bool will_add_overflow(int a, int b) const {
         if (b > 0 && a > INT_MAX - b) return true;
         if (b < 0 && a < INT_MIN - b) return true;
         return false;
     }
 
-    static bool will_sub_overflow(int a, int b) {
+    bool will_sub_overflow(int a, int b) const {
         if (b < 0 && a > INT_MAX + b) return true;
         if (b > 0 && a < INT_MIN + b) return true;
         return false;
     }
 
-    static bool will_mult_overflow(int a, int b) {
+    bool will_mult_overflow(int a, int b) const {
         if (a == 0 || b == 0) return false;
         if (a > 0) {
             if (b > 0) {
@@ -70,7 +70,7 @@ private:
         }
     }
 
-    static bool will_shift_overflow(int a, int shift) {
+    bool will_shift_overflow(int a, int shift) const {
         if (shift < 0 || shift >= sizeof(int) * 8) return true;
 
         if (a == 0) return false;
@@ -128,58 +128,63 @@ public:
     }
 
     binary_int &operator+=(const binary_int &b_int) {
-        if (will_add_overflow(value, b_int.value)) throw overflow_error("overflow!");
-        value = sum(value, b_int.value);
+        if (will_add_overflow(value, b_int.get_value())) throw overflow_error("overflow!");
+        value = sum(value, b_int.get_value());
         return *this;
     }
 
     binary_int operator+(const binary_int &other) const {
-        if (will_add_overflow(value, other.value)) throw overflow_error("overflow!");
-        return binary_int(sum(value, other.value));
+        binary_int result(*this);
+        if (will_add_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        return result += other;
     }
 
     binary_int &operator-=(const binary_int &b_int) {
-        if (will_sub_overflow(value, b_int.value)) throw overflow_error("overflow!");
-        value = sum_with_negative(value, b_int.value);
+        if (will_sub_overflow(value, b_int.get_value())) throw overflow_error("overflow!");
+        value = sum_with_negative(value, b_int.get_value());
         return *this;
     }
 
     binary_int operator-(const binary_int &other) const {
-        if (will_sub_overflow(value, other.value)) throw overflow_error("overflow!");
-        return binary_int(sum_with_negative(value, other.value));
+        binary_int result(*this);
+        if (will_sub_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        return result -= other;
     }
 
     binary_int &operator*=(const binary_int &b_int) {
-        if (will_mult_overflow(value, b_int.value)) throw overflow_error("overflow!");
-        value = multiply(value, b_int.value);
+        if (will_mult_overflow(value, b_int.get_value())) throw overflow_error("overflow!");
+        value = multiply(value, b_int.get_value());
         return *this;
     }
 
     binary_int operator*(const binary_int &other) const {
-        if (will_mult_overflow(value, other.value)) throw overflow_error("overflow!");
-        return binary_int(multiply(value, other.value));
+        binary_int result(*this);
+        if (will_mult_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        return result *= other;
     }
 
-    binary_int &operator>>=(int shift) {
-        if (will_shift_overflow(value, shift)) throw overflow_error("overflow!");
-        value >>= shift;
+    binary_int &operator>>=(const binary_int &other) {
+        if (will_shift_overflow(value, other.get_value())) throw overflow_error("overflow!");
+        value >>= other.get_value();
         return *this;
     }
 
-    binary_int &operator<<=(int shift) {
-        if (will_shift_overflow(value, shift)) throw overflow_error("overflow!");
-        value <<= shift;
+    binary_int &operator<<=(const binary_int &other) {
+        if (will_shift_overflow(value, other.get_value())) throw overflow_error("overflow!");
+        value <<= other.get_value();
         return *this;
     }
 
     binary_int operator>>(const binary_int &other) const {
-        if (will_shift_overflow(value, other.value)) throw overflow_error("overflow!");
-        return binary_int(value >> other.value);
+        binary_int result(*this);
+        if (will_shift_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        return result >>= other;
     }
 
     binary_int operator<<(const binary_int &other) const {
-        if (will_shift_overflow(value, other.value)) throw overflow_error("overflow!");
-        return binary_int(value << other.value);
+        binary_int result(*this);
+        if (will_shift_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        return result <<= other;
     }
 
     pair<binary_int, binary_int> split() const {
@@ -199,13 +204,16 @@ public:
         return os << b.value;
     }
 
+    int get_value() const {
+        return value;
+    }
 };
 
 
 int main() {
     try {
         binary_int c(4);
-        c <<= 22;
+        c += binary_int(2);
         cout << "result: " << c << endl;
         binary_int num1(65537);  // 0x00010001 - one bit in both higher and lower half
         auto [high1, low1] = num1.split();
