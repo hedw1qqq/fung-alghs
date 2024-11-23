@@ -1,11 +1,7 @@
 myvar=55;
 bg=25;
-ccc=bg+11;
+ab=3+3;
+print ab;
+v=1+1;
+ccc=-2147483647 -3;
 print ccc;
-print zhopa;
-myvar=ccc;
-bg=ccc*myvar;
-print;
-x=bg/myvar;
-y=bg/1296;
-print;

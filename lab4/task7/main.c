@@ -13,8 +13,8 @@ typedef struct {
 
 typedef struct {
     MemoryCell *cells;
-    int capacity;
-    int size;
+    size_t capacity;
+    size_t size;
 } Interpreter;
 
 
@@ -70,7 +70,7 @@ StatusCode interpreter_init(Interpreter *interpreter) {
 
 StatusCode find_variable(const Interpreter *interpreter, const char *name, int *index) {
     int left = 0;
-    int right = interpreter->size - 1;
+    int right = (int)interpreter->size - 1;
 
     while (left <= right) {
         int mid = (left + right) / 2;
@@ -101,7 +101,7 @@ StatusCode add_variable(Interpreter *interpreter, const char *name, int value) {
     }
 
     if (interpreter->size == interpreter->capacity) {
-        int new_capacity = interpreter->capacity * 2;
+        size_t new_capacity = interpreter->capacity * 2;
         MemoryCell *new_cells = realloc(interpreter->cells, new_capacity * sizeof(MemoryCell));
 
         if (!new_cells) {
@@ -138,7 +138,7 @@ StatusCode get_variable_value(const Interpreter *interpreter, const char *name, 
 StatusCode check_arithmetic_overflow(int a, int b, char op, int *result) {
     switch (op) {
         case '+':
-            if ((b > 0 && a > INT_MAX - b) || (b < 0 && a < INT_MIN - b)) {
+            if (((b > 0 && a == INT_MAX) && a > INT_MAX - b) || (b < 0 && a < INT_MIN - b)) {
                 return ERROR_NUMBER_OVERFLOW;
             }
             *result = a + b;
@@ -188,7 +188,7 @@ StatusCode check_arithmetic_overflow(int a, int b, char op, int *result) {
 }
 
 void print_all_variables(const Interpreter *interpreter) {
-    for (int i = 0; i < interpreter->size; i++) {
+    for (size_t i = 0; i < interpreter->size; i++) {
         printf("%s = %d\n", interpreter->cells[i].name, interpreter->cells[i].value);
     }
 }
@@ -203,9 +203,7 @@ StatusCode process_instruction(Interpreter *interpreter, const char *instruction
     if (semicolon) {
         *semicolon = '\0';
     }
-    else{
-        return ERROR_INVALID_INSTRUCTION;
-    }
+
 
     if (strncmp(line, "print", 5) == 0) {
         if (strlen(line) == 5) {
@@ -324,7 +322,7 @@ StatusCode process_instruction(Interpreter *interpreter, const char *instruction
 }
 
 void interpreter_cleanup(Interpreter *interpreter) {
-    for (int i = 0; i < interpreter->size; i++) {
+    for (size_t i = 0; i < interpreter->size; i++) {
         free(interpreter->cells[i].name);
     }
     free(interpreter->cells);
