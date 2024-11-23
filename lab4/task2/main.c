@@ -207,10 +207,16 @@ void find_most_frequent(const Array *array, int *most_freq, int *frequency) {
         return;
     }
 
-
     Array temp_array = *array;
-    qsort(temp_array.data, temp_array.size, sizeof(int), compare_asc);
+    temp_array.data = malloc(array->size * sizeof(int)); // Выделяем память под копию
+    if (!temp_array.data) {
+        *most_freq = 0;
+        *frequency = 0;
+        return;
+    }
+    memcpy(temp_array.data, array->data, array->size * sizeof(int)); // Копируем содержимое
 
+    qsort(temp_array.data, temp_array.size, sizeof(int), compare_asc);
 
     int current_freq = 1;
     int max_freq = 1;
@@ -238,7 +244,9 @@ void find_most_frequent(const Array *array, int *most_freq, int *frequency) {
     }
 
     *frequency = max_freq;
+    free(temp_array.data);
 }
+
 
 StatusCode cmd_stats(const Array *array) {
     if (array->size == 0) {
