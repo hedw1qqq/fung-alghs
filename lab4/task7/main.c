@@ -96,6 +96,7 @@ StatusCode add_variable(Interpreter *interpreter, const char *name, int value) {
     int index;
     if (find_variable(interpreter, name, &index) == SUCCESS) {
         interpreter->cells[index].value = value;
+        qsort(interpreter->cells, interpreter->size, sizeof(MemoryCell), compare_cells);
         return SUCCESS;
     }
 
@@ -201,6 +202,9 @@ StatusCode process_instruction(Interpreter *interpreter, const char *instruction
     char *semicolon = strchr(line, ';');
     if (semicolon) {
         *semicolon = '\0';
+    }
+    else{
+        return ERROR_INVALID_INSTRUCTION;
     }
 
     if (strncmp(line, "print", 5) == 0) {
