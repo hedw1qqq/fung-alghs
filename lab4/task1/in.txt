@@ -1,17 +1,28 @@
-#define MAX 100
-#define MIN 0
-#define HELLO "Привет, мир!"
-#define NAME ChatGPT
-#define VALUE 42
+#define     MAX_LENG22TH  10
+#define             GREETING         "Hello"
 
-Этот текст содержит макросы, которые должны быть заменены.
-Максимальное значение: MAX
-Минимальное значение: MIN
-Значение: VALUE
-Пример строки: HELLO
-Имя программы: NAME
-Имя программы: NAME
-Имя программы: NAME
-Имя программы: NAME
-Имя программы: NAME
-Имя программы: NAME
+#define             TINGGREE    "HI!"
+#define      PI            3.14
+#define n 1
+#define A zzz
+
+int main()
+{
+    char message[MAX_LENG22TH] = GREETING;
+    double radius = 2.5;
+    double area = PI * radius * radius;
+
+    char message1[MAX_LENG22TH] = TINGGREE;
+    printf("%s\n", message);
+    printf("Circle area: %f\n", area);
+
+    int a = A + A + A + A + C + D;
+
+    return 0;
+}
+
+n
+n
+
+
+
