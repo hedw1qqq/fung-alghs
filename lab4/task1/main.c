@@ -205,7 +205,7 @@ StatusCode process_define(char* line, HashTable* ht) {
     }
     *ptr = '\0';
 
-    // Удаляем конечные пробелы из value
+
     while (ptr > value && isspace(*(ptr-1))) {
         *(--ptr) = '\0';
     }
@@ -232,7 +232,7 @@ StatusCode process_file(const char* filename) {
 
     char line[MAX_MACRO_LENGTH];
 
-    // First pass: process all #define directives
+    // process all #define
     while (fgets(line, sizeof(line), file)) {
         if (strncmp(line, "#define", 7) == 0) {
             status = process_define(line, &ht);
@@ -251,17 +251,15 @@ StatusCode process_file(const char* filename) {
         }
     }
 
-    // Reset file pointer
     rewind(file);
 
-    // Second pass: process the text
     while (fgets(line, sizeof(line), file)) {
         if (strncmp(line, "#define", 7) == 0) {
             continue;
         }
 
         size_t line_len = strlen(line);
-        char output[MAX_MACRO_LENGTH * 2] = {0};  // Увеличенный буфер для выходной строки
+        char output[MAX_MACRO_LENGTH * 2] = {0};
         size_t out_pos = 0;
         size_t pos = 0;
 
