@@ -2,7 +2,6 @@
 #include <stdexcept>
 #include <cstring>
 
-using namespace std;
 
 class LogicalValuesArray {
 private:
@@ -60,18 +59,18 @@ public:
 
     bool get_bit(int position) const {
         if (position < 0 || position >= sizeof(unsigned int) * 8) {
-            throw out_of_range("Bit position must be between 0 and 31.");
+            throw std::out_of_range("Bit position must be between 0 and 31.");
         }
         return (value >> position) & 1;
     }
 
     void to_binary_string(char *binary_str, size_t size) const {
         if (binary_str == nullptr) {
-            throw invalid_argument("Binary string buffer cannot be null.");
+            throw std::invalid_argument("Binary string buffer cannot be null.");
         }
         size_t binary_length = sizeof(unsigned int) * 8;
         if (size < binary_length + 1) {
-            throw length_error("Buffer size too small");
+            throw std::length_error("Buffer size too small");
         }
 
         for (size_t i = 0; i < binary_length; i++) {
@@ -82,47 +81,45 @@ public:
 };
 
 
-
-
 int main() {
     try {
         LogicalValuesArray a(5); // 5 в двоичной форме: 00000000000000000000000000000101
         LogicalValuesArray b(3); // 3 в двоичной форме: 00000000000000000000000000000011
 
-        cout << "a: " << a.get_value() << ", b: " << b.get_value() << endl;
+        std::cout << "a: " << a.get_value() << ", b: " << b.get_value() << std::endl;
 
-        cout << "Inversion of a: " << a.inversion().get_value() << endl;
-        cout << "Conjunction (AND) a & b: " << a.conjunction(b).get_value() << endl;
-        cout << "Disjunction (OR) a | b: " << a.disjunction(b).get_value() << endl;
-        cout << "Implication a -> b: " << a.implication(b).get_value() << endl;
-        cout << "Equivalence a == b: " << a.equivalence(b).get_value() << endl;
-        cout << "XOR a ^ b: " << a.xor_modulo2(b).get_value() << endl;
-        cout << "Pierce Arrow (NOR) a NOR b: " << a.pierce_arrow(b).get_value() << endl;
-        cout << "Sheffer Stroke (NAND) a NAND b: " << a.sheffer_stroke(b).get_value() << endl;
+        std::cout << "Inversion of a: " << a.inversion().get_value() << std::endl;
+        std::cout << "Conjunction (AND) a & b: " << a.conjunction(b).get_value() << std::endl;
+        std::cout << "Disjunction (OR) a | b: " << a.disjunction(b).get_value() << std::endl;
+        std::cout << "Implication a -> b: " << a.implication(b).get_value() << std::endl;
+        std::cout << "Equivalence a == b: " << a.equivalence(b).get_value() << std::endl;
+        std::cout << "XOR a ^ b: " << a.xor_modulo2(b).get_value() << std::endl;
+        std::cout << "Pierce Arrow (NOR) a NOR b: " << a.pierce_arrow(b).get_value() << std::endl;
+        std::cout << "Sheffer Stroke (NAND) a NAND b: " << a.sheffer_stroke(b).get_value() << std::endl;
 
-        cout << "Equality check (a == b): " << (LogicalValuesArray::equals(a, b) ? "true" : "false") << endl;
+        std::cout << "Equality check (a == b): " << (LogicalValuesArray::equals(a, b) ? "true" : "false") << std::endl;
 
-        cout << "Bit 0 of a: " << a.get_bit(0) << endl;
-        cout << "Bit 1 of a: " << a.get_bit(1) << endl;
+        std::cout << "Bit 0 of a: " << a.get_bit(0) << std::endl;
+        std::cout << "Bit 1 of a: " << a.get_bit(1) << std::endl;
 
         char binary_str[sizeof(unsigned int) * 8 + 1];
         a.to_binary_string(binary_str, sizeof(binary_str));
-        cout << "Binary representation of a: " << binary_str << endl;
+        std::cout << "Binary representation of a: " << binary_str << std::endl;
     }
-    catch (const overflow_error &e) {
-        cerr << "Overflow!" << endl;
+    catch (const std::overflow_error &e) {
+        std::cerr << "Overflow!" << std::endl;
     }
-    catch (const invalid_argument &e) {
-        cerr << "Invalid argument: " << e.what() << endl;
+    catch (const std::invalid_argument &e) {
+        std::cerr << "Invalid argument: " << e.what() << std::endl;
     }
-    catch (const out_of_range &e) {
-        cerr << "Out of range: " << e.what() << endl;
+    catch (const std::out_of_range &e) {
+        std::cerr << "Out of range: " << e.what() << std::endl;
     }
-    catch (const length_error &e) {
-        cerr << "Length error: " << e.what() << endl;
+    catch (const std::length_error &e) {
+        std::cerr << "Length error: " << e.what() << std::endl;
     }
     catch (...) {
-        cerr << "Unknown error occurred!" << endl;
+        std::cerr << "Unknown error occurred!" << std::endl;
     }
     return 0;
 }
