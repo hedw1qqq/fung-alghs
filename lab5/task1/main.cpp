@@ -1,8 +1,6 @@
 #include <iostream>
 #include <climits>
 
-using namespace std;
-
 class binary_int {
 private:
     int value;
@@ -89,7 +87,7 @@ private:
 public:
     binary_int(int val = 0) {
         if (val < INT_MIN || val > INT_MAX) {
-            throw overflow_error("overflow!");
+            throw std::overflow_error("overflow!");
         }
         value = val;
     }
@@ -102,92 +100,92 @@ public:
     }
 
     binary_int &operator++() {
-        if (will_add_overflow(value, 1)) throw overflow_error("overflow!");
+        if (will_add_overflow(value, 1)) throw std::overflow_error("overflow!");
         value = sum(value, 1);
         return *this;
     }
 
     binary_int operator++(int) {
-        if (will_add_overflow(value, 1)) throw overflow_error("overflow!");
+        if (will_add_overflow(value, 1)) throw std::overflow_error("overflow!");
         binary_int temp(*this);
         value = sum(value, 1);
         return temp;
     }
 
     binary_int &operator--() {
-        if (will_sub_overflow(value, 1)) throw overflow_error("overflow!");
+        if (will_sub_overflow(value, 1)) throw std::overflow_error("overflow!");
         value = sum_with_negative(value, 1);
         return *this;
     }
 
     binary_int operator--(int) {
-        if (will_sub_overflow(value, 1)) throw overflow_error("overflow!");
+        if (will_sub_overflow(value, 1)) throw std::overflow_error("overflow!");
         binary_int temp(*this);
         value = sum_with_negative(value, 1);
         return temp;
     }
 
     binary_int &operator+=(const binary_int &b_int) {
-        if (will_add_overflow(value, b_int.get_value())) throw overflow_error("overflow!");
+        if (will_add_overflow(value, b_int.get_value())) throw std::overflow_error("overflow!");
         value = sum(value, b_int.get_value());
         return *this;
     }
 
     binary_int operator+(const binary_int &other) const {
         binary_int result(*this);
-        if (will_add_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        if (will_add_overflow(result.get_value(), other.get_value())) throw std::overflow_error("overflow!");
         return result += other;
     }
 
     binary_int &operator-=(const binary_int &b_int) {
-        if (will_sub_overflow(value, b_int.get_value())) throw overflow_error("overflow!");
+        if (will_sub_overflow(value, b_int.get_value())) throw std::overflow_error("overflow!");
         value = sum_with_negative(value, b_int.get_value());
         return *this;
     }
 
     binary_int operator-(const binary_int &other) const {
         binary_int result(*this);
-        if (will_sub_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        if (will_sub_overflow(result.get_value(), other.get_value())) throw std::overflow_error("overflow!");
         return result -= other;
     }
 
     binary_int &operator*=(const binary_int &b_int) {
-        if (will_mult_overflow(value, b_int.get_value())) throw overflow_error("overflow!");
+        if (will_mult_overflow(value, b_int.get_value())) throw std::overflow_error("overflow!");
         value = multiply(value, b_int.get_value());
         return *this;
     }
 
     binary_int operator*(const binary_int &other) const {
         binary_int result(*this);
-        if (will_mult_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        if (will_mult_overflow(result.get_value(), other.get_value())) throw std::overflow_error("overflow!");
         return result *= other;
     }
 
     binary_int &operator>>=(const binary_int &other) {
-        if (will_shift_overflow(value, other.get_value())) throw overflow_error("overflow!");
+        if (will_shift_overflow(value, other.get_value())) throw std::overflow_error("overflow!");
         value >>= other.get_value();
         return *this;
     }
 
     binary_int &operator<<=(const binary_int &other) {
-        if (will_shift_overflow(value, other.get_value())) throw overflow_error("overflow!");
+        if (will_shift_overflow(value, other.get_value())) throw std::overflow_error("overflow!");
         value <<= other.get_value();
         return *this;
     }
 
     binary_int operator>>(const binary_int &other) const {
         binary_int result(*this);
-        if (will_shift_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        if (will_shift_overflow(result.get_value(), other.get_value())) throw std::overflow_error("overflow!");
         return result >>= other;
     }
 
     binary_int operator<<(const binary_int &other) const {
         binary_int result(*this);
-        if (will_shift_overflow(result.get_value(), other.get_value())) throw overflow_error("overflow!");
+        if (will_shift_overflow(result.get_value(), other.get_value())) throw std::overflow_error("overflow!");
         return result <<= other;
     }
 
-    pair<binary_int, binary_int> split() const {
+    std::pair<binary_int, binary_int> split() const {
         const int total_bits = sizeof(int) * 8;
         const int half_bits = total_bits / 2;
 
@@ -197,65 +195,67 @@ public:
         binary_int higher((value & higher_mask) >> half_bits);
         binary_int lower(value & lower_mask);
 
-        return make_pair(higher, lower);
+        return std::make_pair(higher, lower);
     }
 
-    friend ostream &operator<<(ostream &os, const binary_int &b) {
-        return os << b.value;
-    }
+
 
     int get_value() const {
         return value;
     }
 };
 
+std::ostream &operator <<(std::ostream &os, binary_int b){
+    return os << b.get_value();
+}
+
 
 int main() {
     try {
         binary_int c(4);
         c += binary_int(2);
-        cout << "result: " << c << endl;
+        std::cout << "result: " << c << std::endl;
         binary_int num1(65537);  // 0x00010001 - one bit in both higher and lower half
         auto [high1, low1] = num1.split();
-        cout << "Test 1 (65537):" << endl;
-        cout << "Higher half: " << high1 << " (expected 1)" << endl;
-        cout << "Lower half: " << low1 << " (expected 1)" << endl;
+        std::cout << "Test 1 (65537):" << std::endl;
+        std::cout << "Higher half: " << high1 << " (expected 1)" << std::endl;
+        std::cout << "Lower half: " << low1 << " (expected 1)" << std::endl;
 
         // Test 2: Number only in lower half
         binary_int num2(255);  // 0x000000FF - all bits in lower part
         auto [high2, low2] = num2.split();
-        cout << "\nTest 2 (255):" << endl;
-        cout << "Higher half: " << high2 << " (expected 0)" << endl;
-        cout << "Lower half: " << low2 << " (expected 255)" << endl;
+        std::cout << "\nTest 2 (255):" << std::endl;
+        std::cout << "Higher half: " << high2 << " (expected 0)" << std::endl;
+        std::cout << "Lower half: " << low2 << " (expected 255)" << std::endl;
 
         // Test 3: Number only in higher half
         binary_int num3(16777216);  // 0x01000000 - one bit in higher part
         auto [high3, low3] = num3.split();
-        cout << "\nTest 3 (16777216):" << endl;
-        cout << "Higher half: " << high3 << " (expected 256)" << endl;
-        cout << "Lower half: " << low3 << " (expected 0)" << endl;
+        std::cout << "\nTest 3 (16777216):" << std::endl;
+        std::cout << "Higher half: " << high3 << " (expected 256)" << std::endl;
+        std::cout << "Lower half: " << low3 << " (expected 0)" << std::endl;
 
         // Test 4: Maximum 16-bit number
         binary_int num4(65535);  // 0x0000FFFF - all bits in lower part
         auto [high4, low4] = num4.split();
-        cout << "\nTest 4 (65535):" << endl;
-        cout << "Higher half: " << high4 << " (expected 0)" << endl;
-        cout << "Lower half: " << low4 << " (expected 65535)" << endl;
+        std::cout << "\nTest 4 (65535):" << std::endl;
+        std::cout << "Higher half: " << high4 << " (expected 0)" << std::endl;
+        std::cout << "Lower half: " << low4 << " (expected 65535)" << std::endl;
 
         // Test 5: Negative number
         binary_int num5(-65537);
         auto [high5, low5] = num5.split();
-        cout << "\nTest 5 (-65537):" << endl;
-        cout << "Higher half: " << high5 << endl;
-        cout << "Lower half: " << low5 << endl;
+        std::cout << "\nTest 5 (-65537):" << std::endl;
+        std::cout << "Higher half: " << high5 << std::endl;
+        std::cout << "Lower half: " << low5 << std::endl;
         binary_int v(66);
         v *= (INT_MAX);
-        cout << v << endl;
-    } catch (const overflow_error &e) {
-        cerr << "overflow!" << endl;
+        std::cout << v << std::endl;
+    } catch (const std::overflow_error &e) {
+        std::cerr << "overflow!" << std::endl;
     }
     catch (...) {
-        cerr << "Unknown error occurred!" << endl;
+        std::cerr << "Unknown error occurred!" << std::endl;
     }
     return 0;
 }
