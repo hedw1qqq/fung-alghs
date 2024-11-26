@@ -85,7 +85,7 @@ private:
 
 
 public:
-    binary_int(int val = 0) {
+    explicit binary_int(int val = 0) {
         if (val < INT_MIN || val > INT_MAX) {
             throw std::overflow_error("overflow!");
         }
