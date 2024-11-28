@@ -3,10 +3,10 @@
 
 int main() {
     // Example 2: A Concave Quadrilateral
-    Point points2[] = { {0, 0}, {4, 0}, {2, 2}, {4.0, 4.0}, {0, 4} };
-    int result2 = is_convex_polygon(4, points2[0], points2[1], points2[2], points2[3]);
-    printf("Example 2: A Concave Quadrilateral\n");
-    printf("Expected result: 0 (concave)\n");
+    Point points2[] = { {0, 0}, {1, 1}, {2, 2}, };
+    int result2 = is_convex_polygon(3, points2[0], points2[1], points2[2]);
+    printf("Example 2: Line\n");
+    printf("Expected result: 0 (line)\n");
     printf("Actual result: %d\n\n", result2);
 
     // Example 3: A Convex Pentagon
@@ -91,17 +91,14 @@ int main() {
     Error_codes status = calculate_polynomial(&calc, 2.0, 3, 1.0, -2.0, 4.0, 3.0);
     if (status == OK) {
         printf("%.6f\n\n", calc);
-    } else printf("Error: %d\n", status);
+    }
+    else printf("Error: %d\n", status);
 
 
     check_kaprekar_numbers_in_base(16, 6, "000000FFFF", "AB", "297", "A", "10", "C3C4");
     check_kaprekar_numbers_in_base(10, 4, "000000000000000000045", "9", "297", "10");
     check_kaprekar_numbers_in_base(8, 3, "0000000000077777", "111112", "1616");
     check_kaprekar_numbers_in_base(36, 3, "PP", "SS", "10");
-    printf("\n\n");
-    kaprekar_v2(16, 5, "0000000000000000FFFF", "AB", "297", "A", "10");
-    kaprekar_v2(10, 4, "000000000000000000045", "9", "297", "10");
-    kaprekar_v2(8, 3, "0000000000077777", "111112", "1616");
-    kaprekar_v2(36, 3, "PP", "SS", "10");
+
     return 0;
 }
