@@ -1,7 +1,4 @@
-myvar=55;
-bg=25;
-ab=3+3;
-print ab;
-v=1+1;
-ccc=-2147483647 -3;
+vvv=0;
+print vvv;
+ccc=-2147483647-2;
 print ccc;

@@ -3,19 +3,20 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
+
 #define INITIAL_HASHSIZE 128
 #define MAX_MACRO_LENGTH 1024
 #define MIN_HASHSIZE 64
 #define MAX_HASHSIZE 1024
 
 typedef struct MacroNode {
-    char* name;
-    char* value;
-    struct MacroNode* next;
+    char *name;
+    char *value;
+    struct MacroNode *next;
 } MacroNode;
 
 typedef struct {
-    MacroNode** table;
+    MacroNode **table;
     size_t size;
     size_t count;
 } HashTable;
@@ -29,25 +30,26 @@ typedef enum {
     ERROR_HASH_TABLE_FULL
 } StatusCode;
 
-static unsigned long hash_function(const char* str, size_t table_size) {
-    unsigned long hash = 0;
+size_t hash_function(const char *str, size_t table_size) {
+    size_t hash = 0;
     int c;
 
     while ((c = *str++)) {
+        if (isspace(c)) continue;
         if (isdigit(c)) {
-            hash = hash * 62 + (c - '0');
+            hash = hash * 62 + ((size_t) (c - '0'));
         } else if (isupper(c)) {
-            hash = hash * 62 + (c - 'A' + 10);
+            hash = hash * 62 + ((size_t) (c - 'A' + 10));
         } else if (islower(c)) {
-            hash = hash * 62 + (c - 'a' + 36);
+            hash = hash * 62 + ((size_t) (c - 'a' + 36));
         }
     }
 
     return hash % table_size;
 }
 
-StatusCode create_hash_table(HashTable* ht, size_t size) {
-    ht->table = calloc(size, sizeof(MacroNode*));
+StatusCode create_hash_table(HashTable *ht, size_t size) {
+    ht->table = calloc(size, sizeof(MacroNode *));
     if (!ht->table) {
         return ERROR_MEMORY_ALLOCATION;
     }
@@ -57,11 +59,14 @@ StatusCode create_hash_table(HashTable* ht, size_t size) {
     return SUCCESS;
 }
 
-void free_hash_table(HashTable* ht) {
+void free_hash_table(HashTable *ht) {
+    if (!ht) {
+        return;
+    }
     for (size_t i = 0; i < ht->size; i++) {
-        MacroNode* current = ht->table[i];
+        MacroNode *current = ht->table[i];
         while (current) {
-            MacroNode* next = current->next;
+            MacroNode *next = current->next;
             free(current->name);
             free(current->value);
             free(current);
@@ -74,13 +79,13 @@ void free_hash_table(HashTable* ht) {
     ht->count = 0;
 }
 
-StatusCode insert_macro(HashTable* ht, const char* name, const char* value) {
+StatusCode insert_macro(HashTable *ht, const char *name, const char *value) {
     unsigned long hash = hash_function(name, ht->size);
 
-    MacroNode* current = ht->table[hash];
+    MacroNode *current = ht->table[hash];
     while (current) {
         if (strcmp(current->name, name) == 0) {
-            char* new_value = strdup(value);
+            char *new_value = strdup(value);
             if (!new_value) {
                 return ERROR_MEMORY_ALLOCATION;
             }
@@ -91,7 +96,7 @@ StatusCode insert_macro(HashTable* ht, const char* name, const char* value) {
         current = current->next;
     }
 
-    MacroNode* new_node = malloc(sizeof(MacroNode));
+    MacroNode *new_node = malloc(sizeof(MacroNode));
     if (!new_node) {
         return ERROR_MEMORY_ALLOCATION;
     }
@@ -112,9 +117,9 @@ StatusCode insert_macro(HashTable* ht, const char* name, const char* value) {
     return SUCCESS;
 }
 
-const char* find_macro(const HashTable* ht, const char* name) {
+const char *find_macro(const HashTable *ht, const char *name) {
     unsigned long hash = hash_function(name, ht->size);
-    MacroNode* current = ht->table[hash];
+    MacroNode *current = ht->table[hash];
 
     while (current) {
         if (strcmp(current->name, name) == 0) {
@@ -126,13 +131,13 @@ const char* find_macro(const HashTable* ht, const char* name) {
     return NULL;
 }
 
-StatusCode rebalance_if_needed(HashTable* ht) {
+StatusCode rebalance_if_needed(HashTable *ht) {
     size_t min_chain = SIZE_MAX;
     size_t max_chain = 0;
 
     for (size_t i = 0; i < ht->size; i++) {
         size_t chain_length = 0;
-        MacroNode* current = ht->table[i];
+        MacroNode *current = ht->table[i];
         while (current) {
             chain_length++;
             current = current->next;
@@ -160,7 +165,7 @@ StatusCode rebalance_if_needed(HashTable* ht) {
         }
 
         for (size_t i = 0; i < ht->size; i++) {
-            MacroNode* current = ht->table[i];
+            MacroNode *current = ht->table[i];
             while (current) {
                 status = insert_macro(&new_ht, current->name, current->value);
                 if (status != SUCCESS) {
@@ -177,16 +182,18 @@ StatusCode rebalance_if_needed(HashTable* ht) {
 
     return SUCCESS;
 }
-
-StatusCode process_define(char* line, HashTable* ht) {
+StatusCode process_define(char *line, HashTable *ht) {
     char name[MAX_MACRO_LENGTH] = {0};
     char value[MAX_MACRO_LENGTH] = {0};
 
-    char* start = line + 7;  // Skip "#define"
+    char *start = line + 7;
     while (*start && isspace(*start)) start++;
 
-    char* ptr = name;
-    while (*start && !isspace(*start)) {
+    char *ptr = name;
+    if (!isalpha(*start) && *start != '_') {
+        return ERROR_INVALID_DEFINE;
+    }
+    while (*start && (isalnum(*start) || *start == '_')) {
         if (ptr - name >= MAX_MACRO_LENGTH - 1) {
             return ERROR_INVALID_DEFINE;
         }
@@ -205,8 +212,7 @@ StatusCode process_define(char* line, HashTable* ht) {
     }
     *ptr = '\0';
 
-
-    while (ptr > value && isspace(*(ptr-1))) {
+    while (ptr > value && isspace(*(ptr - 1))) {
         *(--ptr) = '\0';
     }
 
@@ -217,8 +223,8 @@ StatusCode process_define(char* line, HashTable* ht) {
     return insert_macro(ht, name, value);
 }
 
-StatusCode process_file(const char* filename) {
-    FILE* file = fopen(filename, "r");
+StatusCode process_file(const char *filename) {
+    FILE *file = fopen(filename, "r");
     if (!file) {
         return ERROR_FILE_OPERATION;
     }
@@ -232,10 +238,16 @@ StatusCode process_file(const char* filename) {
 
     char line[MAX_MACRO_LENGTH];
 
-    // process all #define
     while (fgets(line, sizeof(line), file)) {
-        if (strncmp(line, "#define", 7) == 0) {
-            status = process_define(line, &ht);
+        // Удаляем пробелы
+        char *trimmed_line = line;
+        while (*trimmed_line && isspace(*trimmed_line)) {
+            trimmed_line++;
+        }
+
+        // Начинается ли с дефайна
+        if (strncmp(trimmed_line, "#define", 7) == 0) {
+            status = process_define(trimmed_line, &ht);
             if (status != SUCCESS) {
                 free_hash_table(&ht);
                 fclose(file);
@@ -254,38 +266,57 @@ StatusCode process_file(const char* filename) {
     rewind(file);
 
     while (fgets(line, sizeof(line), file)) {
-        if (strncmp(line, "#define", 7) == 0) {
-            continue;
+        char *trimmed_line = line;
+        while (*trimmed_line && isspace(*trimmed_line)) {
+            trimmed_line++;
         }
 
-        size_t line_len = strlen(line);
-        char output[MAX_MACRO_LENGTH * 2] = {0};
-        size_t out_pos = 0;
-        size_t pos = 0;
+        if (strncmp(trimmed_line, "#define", 7) == 0) {
+            continue;  // Пропускаем директивы #define
+        }
 
-        while (pos < line_len) {
-            if (isalnum(line[pos]) || line[pos] == '_') {
-                char word[MAX_MACRO_LENGTH] = {0};
-                size_t word_pos = 0;
+        char temp[MAX_MACRO_LENGTH * 2];
+        strcpy(temp, trimmed_line);
 
-                while (pos < line_len && (isalnum(line[pos]) || line[pos] == '_')) {
-                    word[word_pos++] = line[pos++];
-                }
+        while (1) {
+            char resolved[MAX_MACRO_LENGTH * 2] = {0};
+            size_t r_pos = 0;
+            size_t pos = 0;
+            int changed = 0;
 
-                const char* replacement = find_macro(&ht, word);
-                if (replacement) {
-                    strcpy(output + out_pos, replacement);
-                    out_pos += strlen(replacement);
+            while (pos < strlen(temp)) {
+                if (isalnum(temp[pos]) || temp[pos] == '_') {
+                    char word[MAX_MACRO_LENGTH] = {0};
+                    size_t word_pos = 0;
+
+                    while (pos < strlen(temp) && (isalnum(temp[pos]) || temp[pos] == '_')) {
+                        word[word_pos++] = temp[pos++];
+                    }
+
+                    const char *replacement = find_macro(&ht, word);
+                    if (replacement) {
+                        strcpy(resolved + r_pos, replacement);
+                        r_pos += strlen(replacement);
+                        changed = 1;
+                    } else {
+                        strcpy(resolved + r_pos, word);
+                        r_pos += strlen(word);
+                    }
                 } else {
-                    strcpy(output + out_pos, word);
-                    out_pos += strlen(word);
+                    resolved[r_pos++] = temp[pos++];
                 }
-            } else {
-                output[out_pos++] = line[pos++];
             }
+
+            resolved[r_pos] = '\0';
+
+            if (!changed) {
+                break;
+            }
+
+            strcpy(temp, resolved);
         }
 
-        printf("%s", output);
+        printf("%s", temp);
     }
 
     free_hash_table(&ht);
@@ -293,7 +324,10 @@ StatusCode process_file(const char* filename) {
     return SUCCESS;
 }
 
-int main(int argc, char* argv[]) {
+
+
+
+int main(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
         return ERROR_INVALID_ARGS;
@@ -301,7 +335,7 @@ int main(int argc, char* argv[]) {
 
     StatusCode status = process_file(argv[1]);
     if (status != SUCCESS) {
-        const char* error_messages[] = {
+        const char *error_messages[] = {
                 "Success",
                 "Memory allocation error",
                 "File operation error",
@@ -310,7 +344,7 @@ int main(int argc, char* argv[]) {
                 "Hash table full"
         };
         fprintf(stderr, "Error: %s\n", error_messages[status]);
-        return status;
+        return (int) status;
     }
 
     return SUCCESS;
