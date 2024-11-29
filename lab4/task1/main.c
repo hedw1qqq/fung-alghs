@@ -80,7 +80,8 @@ void free_hash_table(HashTable *ht) {
 }
 
 StatusCode insert_macro(HashTable *ht, const char *name, const char *value) {
-    unsigned long hash = hash_function(name, ht->size);
+
+    unsigned long hash = (unsigned long)hash_function(name, ht->size);
 
     MacroNode *current = ht->table[hash];
     while (current) {
@@ -118,7 +119,8 @@ StatusCode insert_macro(HashTable *ht, const char *name, const char *value) {
 }
 
 const char *find_macro(const HashTable *ht, const char *name) {
-    unsigned long hash = hash_function(name, ht->size);
+
+    unsigned long hash = (unsigned long)hash_function(name, ht->size);
     MacroNode *current = ht->table[hash];
 
     while (current) {
@@ -130,6 +132,7 @@ const char *find_macro(const HashTable *ht, const char *name) {
 
     return NULL;
 }
+
 
 StatusCode rebalance_if_needed(HashTable *ht) {
     size_t min_chain = SIZE_MAX;
@@ -272,7 +275,7 @@ StatusCode process_file(const char *filename) {
         }
 
         if (strncmp(trimmed_line, "#define", 7) == 0) {
-            continue;  // Пропускаем директивы #define
+            continue;
         }
 
         char temp[MAX_MACRO_LENGTH * 2];
