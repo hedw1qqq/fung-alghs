@@ -279,8 +279,10 @@ StatusCode process_instruction(Interpreter *interpreter, const char *instruction
     char *semicolon = strchr(line, ';');
     if (semicolon) {
         *semicolon = '\0';
+    } else {
+        free(line);
+        return ERROR_INVALID_INSTRUCTION;
     }
-
     char *start = line;
     while (isspace(*start)) start++;
     char *end = start + strlen(start) - 1;
@@ -434,5 +436,5 @@ int main(int argc, char *argv[]) {
     fclose(file);
     interpreter_cleanup(&interpreter);
 
-    return (int)final_status;
+    return (int) final_status;
 }

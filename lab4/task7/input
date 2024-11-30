@@ -1,4 +1,6 @@
 vvv=0;
 print vvv;
+print
 ccc=-2147483647-2;
 print ccc;
+print
