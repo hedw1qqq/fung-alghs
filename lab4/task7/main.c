@@ -318,7 +318,9 @@ StatusCode process_instruction(Interpreter *interpreter, const char *instruction
     char *var_name = start;
     char *expression = equals + 1;
 
-    while (isspace(*var_name)) var_name++;
+    while (isspace(*var_name)) {
+        var_name++;
+    }
     end = var_name + strlen(var_name) - 1;
     while (end > var_name && isspace(*end)) *end-- = '\0';
 

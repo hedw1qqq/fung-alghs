@@ -81,7 +81,7 @@ void free_hash_table(HashTable *ht) {
 
 StatusCode insert_macro(HashTable *ht, const char *name, const char *value) {
 
-    unsigned long hash = (unsigned long)hash_function(name, ht->size);
+    unsigned long hash = (unsigned long) hash_function(name, ht->size);
 
     MacroNode *current = ht->table[hash];
     while (current) {
@@ -120,7 +120,7 @@ StatusCode insert_macro(HashTable *ht, const char *name, const char *value) {
 
 const char *find_macro(const HashTable *ht, const char *name) {
 
-    unsigned long hash = (unsigned long)hash_function(name, ht->size);
+    unsigned long hash = (unsigned long) hash_function(name, ht->size);
     MacroNode *current = ht->table[hash];
 
     while (current) {
@@ -145,8 +145,12 @@ StatusCode rebalance_if_needed(HashTable *ht) {
             chain_length++;
             current = current->next;
         }
-        if (chain_length < min_chain) min_chain = chain_length;
-        if (chain_length > max_chain) max_chain = chain_length;
+        if (chain_length < min_chain) {
+            min_chain = chain_length;
+        }
+        if (chain_length > max_chain) {
+            max_chain = chain_length;
+        }
     }
 
     if (max_chain >= 2 && min_chain * 2 <= max_chain) {
@@ -185,6 +189,7 @@ StatusCode rebalance_if_needed(HashTable *ht) {
 
     return SUCCESS;
 }
+
 StatusCode process_define(char *line, HashTable *ht) {
     char name[MAX_MACRO_LENGTH] = {0};
     char value[MAX_MACRO_LENGTH] = {0};
@@ -326,8 +331,6 @@ StatusCode process_file(const char *filename) {
     fclose(file);
     return SUCCESS;
 }
-
-
 
 
 int main(int argc, char *argv[]) {
